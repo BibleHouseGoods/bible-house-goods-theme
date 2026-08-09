@@ -1,8 +1,63 @@
+{% liquid
+  assign cart_has_preorder = false
+  for item in cart.items
+    assign item_has_preorder_property = false
+    for property in item.properties
+      if property.first == 'Shipping status' and property.last contains 'Preorder'
+        assign item_has_preorder_property = true
+      endif
+    endfor
+    if item_has_preorder_property
+      assign cart_has_preorder = true
+      break
+    elsif item.variant.inventory_management and item.variant.inventory_quantity <= 0 and item.variant.inventory_policy == 'continue'
+      assign cart_has_preorder = true
+      break
+    endif
+  endfor
+%}
 <section class="cart-page page-width">
   <span class="eyebrow">Your order</span><h1 class="display-title">Cart</h1>
-  {% if cart.empty? %}<div class="empty-state"><p>Your cart is currently empty.</p><a class="button" href="{{ routes.all_products_collection_url }}">Continue shopping</a></div>{% else %}
+  {% if cart.empty? %}
+    <div class="empty-state"><p>Your cart is currently empty.</p><a class="button" href="{{ routes.all_products_collection_url }}">Continue shopping</a></div>
+  {% else %}
+    {% if cart_has_preorder %}
+      <aside class="cart-preorder-notice">
+        <strong>Your order includes a preorder.</strong>
+        <p>Preorder items are expected to ship in 3–4 weeks. If your order also includes in-stock items, the complete order will ship together when every item is ready.</p>
+      </aside>
+    {% endif %}
     <form action="{{ routes.cart_url }}" method="post">
-      <table class="cart-table"><thead><tr><th>Product</th><th>Price</th><th>Quantity</th><th>Total</th></tr></thead><tbody>{% for item in cart.items %}<tr><td><div class="cart-product">{% if item.image %}{{ item.image | image_url: width: 220 | image_tag: loading: 'lazy', alt: item.title }}{% endif %}<div><a href="{{ item.url }}"><strong>{% render 'trademark-title', title: item.product.title %}</strong></a>{% unless item.product.has_only_default_variant %}<p>{{ item.variant.title }}</p>{% endunless %}{% for property in item.properties %}{% assign property_first_character = property.first | slice: 0 %}{% unless property.last == blank or property_first_character == '_' %}<p class="cart-property"><strong>{{ property.first }}:</strong> {{ property.last }}</p>{% endunless %}{% endfor %}<a href="{{ item.url_to_remove }}">Remove</a></div></div></td><td>{{ item.final_price | money }}</td><td><label class="visually-hidden" for="Quantity-{{ forloop.index }}">Quantity for {{ item.product.title }}</label><input id="Quantity-{{ forloop.index }}" type="number" name="updates[]" value="{{ item.quantity }}" min="0"></td><td>{{ item.final_line_price | money }}</td></tr>{% endfor %}</tbody></table>
+      <table class="cart-table">
+        <thead><tr><th>Product</th><th>Price</th><th>Quantity</th><th>Total</th></tr></thead>
+        <tbody>
+          {% for item in cart.items %}
+            {% assign item_is_preorder = false %}
+            {% for property in item.properties %}
+              {% if property.first == 'Shipping status' and property.last contains 'Preorder' %}{% assign item_is_preorder = true %}{% endif %}
+            {% endfor %}
+            {% if item.variant.inventory_management and item.variant.inventory_quantity <= 0 and item.variant.inventory_policy == 'continue' %}{% assign item_is_preorder = true %}{% endif %}
+            <tr>
+              <td><div class="cart-product">
+                {% if item.image %}{{ item.image | image_url: width: 220 | image_tag: loading: 'lazy', alt: item.title }}{% endif %}
+                <div>
+                  <a href="{{ item.url }}"><strong>{% render 'trademark-title', title: item.product.title %}</strong></a>
+                  {% unless item.product.has_only_default_variant %}<p>{{ item.variant.title }}</p>{% endunless %}
+                  {% if item_is_preorder %}<p class="cart-property cart-property--preorder"><strong>Preorder:</strong> Expected to ship in 3–4 weeks.</p>{% endif %}
+                  {% for property in item.properties %}
+                    {% assign property_first_character = property.first | slice: 0 %}
+                    {% unless property.last == blank or property_first_character == '_' or property.first == 'Shipping status' %}<p class="cart-property"><strong>{{ property.first }}:</strong> {{ property.last }}</p>{% endunless %}
+                  {% endfor %}
+                  <a href="{{ item.url_to_remove }}">Remove</a>
+                </div>
+              </div></td>
+              <td>{{ item.final_price | money }}</td>
+              <td><label class="visually-hidden" for="Quantity-{{ forloop.index }}">Quantity for {{ item.product.title }}</label><input id="Quantity-{{ forloop.index }}" type="number" name="updates[]" value="{{ item.quantity }}" min="0"></td>
+              <td>{{ item.final_line_price | money }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
       <div class="cart-footer"><div class="cart-summary"><p class="cart-summary__total">Subtotal: {{ cart.total_price | money }}</p><p>Taxes and shipping calculated at checkout.</p><div class="govx-discount"><i data-govx-id></i></div><div class="button-row"><a class="button cart-keep-shopping" href="{{ all_products['the-bible-band'].url | default: routes.all_products_collection_url }}">{{ 'cart.keep_shopping' | t }}</a><button class="button" type="submit" name="update">Update cart</button><button class="button button--gold" type="submit" name="checkout" data-checkout-start="cart">Checkout</button></div></div></div>
     </form>
   {% endif %}

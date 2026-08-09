@@ -111,12 +111,18 @@
     {% if product.selected_or_first_available_variant.sku != blank %}"sku": {{ product.selected_or_first_available_variant.sku | json }},{% endif %}
     "offers": [
       {% for variant in product.variants %}
+        {% assign offer_availability = 'InStock' %}
+        {% if variant.inventory_management and variant.inventory_quantity <= 0 and variant.inventory_policy == 'continue' %}
+          {% assign offer_availability = 'BackOrder' %}
+        {% elsif variant.available == false %}
+          {% assign offer_availability = 'OutOfStock' %}
+        {% endif %}
         {
           "@type": "Offer",
           "url": {{ shop.url | append: variant.url | json }},
           "priceCurrency": {{ cart.currency.iso_code | json }},
           "price": {{ variant.price | divided_by: 100.0 | json }},
-          "availability": "https://schema.org/{% if variant.available %}InStock{% else %}OutOfStock{% endif %}",
+          "availability": "https://schema.org/{{ offer_availability }}",
           "itemCondition": "https://schema.org/NewCondition"{% if variant.sku != blank %},
           "sku": {{ variant.sku | json }}{% endif %}
         }{% unless forloop.last %},{% endunless %}

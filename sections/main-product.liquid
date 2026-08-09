@@ -4,8 +4,23 @@
     assign is_bible_band = true
   endif
   assign product_form_id = 'ProductForm-' | append: section.id
+  assign restock_form_id = 'BackInStockForm-' | append: section.id
+  assign low_stock_threshold = section.settings.low_stock_threshold | default: 5
   assign gallery_limit = 8
   assign gallery_count = product.media.size | at_most: gallery_limit
+  assign selected_variant = product.selected_or_first_available_variant
+  assign selected_is_preorder = false
+  assign selected_is_low_stock = false
+  assign selected_inventory_message = section.settings.in_stock_message | default: 'In stock — ships in 1–2 business days.'
+  if selected_variant.inventory_management and selected_variant.inventory_quantity <= 0 and selected_variant.inventory_policy == 'continue'
+    assign selected_is_preorder = true
+    assign selected_inventory_message = section.settings.preorder_message | default: 'Preorder — expected to ship in 3–4 weeks.'
+  elsif selected_variant.available == false
+    assign selected_inventory_message = 'Sold out.'
+  elsif selected_variant.inventory_management and selected_variant.inventory_quantity > 0 and selected_variant.inventory_quantity <= low_stock_threshold
+    assign selected_is_low_stock = true
+    assign selected_inventory_message = 'Only ' | append: selected_variant.inventory_quantity | append: ' left — ships now.'
+  endif
   assign demo_media = blank
   for media in product.media
     if media.media_type == 'video' or media.media_type == 'external_video'
@@ -40,7 +55,7 @@
           <div class="product-meta">
             <details><summary>{{ 'products.bible_band.details_heading' | t }}</summary><div class="rte"><p>{{ 'products.bible_band.details_copy' | t }}</p></div></details>
             <details><summary>{{ 'products.bible_band.compatibility_heading' | t }}</summary><div class="rte"><p>{{ 'products.bible_band.compatibility_copy' | t }}</p></div></details>
-            <details><summary>{{ 'products.bible_band.shipping_heading' | t }}</summary><div class="rte"><p>{{ 'products.bible_band.shipping_copy' | t }}</p></div></details>
+            <details><summary>{{ 'products.bible_band.shipping_heading' | t }}</summary><div class="rte"><p><span data-delivery-summary>{{ selected_inventory_message }}</span> Free shipping on Bible Band orders. Visit our FAQ or contact us if you need help.</p></div></details>
           </div>
         {% else %}
           <div class="rte">{{ product.description }}</div>
@@ -89,14 +104,34 @@
       {% endif %}
       {% form 'product', product, id: product_form_id, class: 'product-form', data-product-form: '' %}
         <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+        <input type="hidden" name="properties[Shipping status]" value="{{ selected_inventory_message | escape }}" data-preorder-property{% unless selected_is_preorder %} disabled{% endunless %}>
         {% unless product.has_only_default_variant %}
           <div>
             <label class="field-label{% if is_bible_band %} field-label--band-choice{% endif %}" for="Variant-{{ section.id }}">
               {% if is_bible_band %}{{ 'products.bible_band.choose_band' | t }}{% else %}Choose an option{% endif %}
             </label>
-            <select id="Variant-{{ section.id }}" data-variant-select data-product-title="{{ product.title | escape }}">{% for variant in product.variants %}{% assign is_preorder = false %}{% if variant.option2 == 'Cobalt Blue / Grey Aztec' or variant.option2 == 'Space Grey / Sport Grey' or variant.option2 == 'Pink Bubblegum / Bubblegum Check' or variant.option2 == 'Maroon / Maroon Aztec' %}{% assign is_preorder = true %}{% endif %}<option value="{{ variant.id }}" data-available="{{ variant.available }}" data-preorder="{{ is_preorder }}" data-media-id="{{ variant.featured_media.id }}" data-price="{{ variant.price | money }}" data-variant-title="{{ variant.title | escape }}"{% if variant == product.selected_or_first_available_variant %} selected{% endif %}>{{ variant.title }}{% if is_preorder %} — Preorder{% elsif variant.available == false %} — Sold out{% endif %}</option>{% endfor %}</select>
+            <select id="Variant-{{ section.id }}" data-variant-select data-product-title="{{ product.title | escape }}" data-in-stock-message="{{ section.settings.in_stock_message | default: 'In stock — ships in 1–2 business days.' | escape }}" data-preorder-message="{{ section.settings.preorder_message | default: 'Preorder — expected to ship in 3–4 weeks.' | escape }}" data-low-stock-threshold="{{ low_stock_threshold }}">
+              {% for variant in product.variants %}
+                {% liquid
+                  assign is_preorder = false
+                  assign is_low_stock = false
+                  assign inventory_message = section.settings.in_stock_message | default: 'In stock — ships in 1–2 business days.'
+                  if variant.inventory_management and variant.inventory_quantity <= 0 and variant.inventory_policy == 'continue'
+                    assign is_preorder = true
+                    assign inventory_message = section.settings.preorder_message | default: 'Preorder — expected to ship in 3–4 weeks.'
+                  elsif variant.available == false
+                    assign inventory_message = 'Sold out.'
+                  elsif variant.inventory_management and variant.inventory_quantity > 0 and variant.inventory_quantity <= low_stock_threshold
+                    assign is_low_stock = true
+                    assign inventory_message = 'Only ' | append: variant.inventory_quantity | append: ' left — ships now.'
+                  endif
+                %}
+                <option value="{{ variant.id }}" data-available="{{ variant.available }}" data-preorder="{{ is_preorder }}" data-low-stock="{{ is_low_stock }}" data-status-message="{{ inventory_message | escape }}" data-inventory-managed="{% if variant.inventory_management %}true{% else %}false{% endif %}" data-inventory-quantity="{{ variant.inventory_quantity }}" data-inventory-policy="{{ variant.inventory_policy }}" data-media-id="{{ variant.featured_media.id }}" data-price="{{ variant.price | money }}" data-variant-title="{{ variant.title | escape }}"{% if variant == product.selected_or_first_available_variant %} selected{% endif %}>{{ variant.title }}{% if is_preorder %} — Preorder{% elsif is_low_stock %} — Only {{ variant.inventory_quantity }} left{% elsif variant.available == false %} — Sold out{% endif %}</option>
+              {% endfor %}
+            </select>
           </div>
         {% endunless %}
+        {% if is_bible_band %}<p class="product-inventory-status" data-inventory-status data-state="{% if selected_is_preorder %}preorder{% elsif selected_is_low_stock %}low-stock{% elsif selected_variant.available %}in-stock{% else %}sold-out{% endif %}" aria-live="polite">{{ selected_inventory_message }}</p>{% endif %}
         {% if is_bible_band %}
           <fieldset class="band-tiers" data-band-tiers>
             <legend class="field-label">{{ 'products.bible_band.quantity_heading' | t }}</legend>
@@ -128,18 +163,14 @@
         {% else %}
           <div><label class="field-label" for="Quantity-{{ section.id }}">Quantity</label><input id="Quantity-{{ section.id }}" type="number" name="quantity" min="1" value="1"></div>
         {% endif %}
-        {% assign selected_is_preorder = false %}
-        {% if product.selected_or_first_available_variant.option2 == 'Cobalt Blue / Grey Aztec' or product.selected_or_first_available_variant.option2 == 'Space Grey / Sport Grey' or product.selected_or_first_available_variant.option2 == 'Pink Bubblegum / Bubblegum Check' or product.selected_or_first_available_variant.option2 == 'Maroon / Maroon Aztec' %}
-          {% assign selected_is_preorder = true %}
-        {% endif %}
-        <button class="button" type="submit" data-primary-product-submit data-product-title="{{ product.title | escape }}"{% unless product.selected_or_first_available_variant.available %} disabled{% endunless %}>{% if selected_is_preorder %}Preorder{% elsif product.selected_or_first_available_variant.available %}Add to cart{% else %}Sold out{% endif %}</button>
+        <button class="button" type="submit" data-primary-product-submit data-product-title="{{ product.title | escape }}"{% unless product.selected_or_first_available_variant.available %} disabled{% endunless %}>{% if selected_is_preorder %}Preorder now{% elsif product.selected_or_first_available_variant.available %}Add to cart{% else %}Sold out{% endif %}</button>
         {% if is_bible_band %}
           <ul class="purchase-reassurance" aria-label="Purchase reassurance">
             <li><strong>Free shipping</strong><span>on Bible Band orders</span></li>
             <li><strong>No app</strong><span>tap and open</span></li>
             <li><strong>No subscription</strong><span>ever</span></li>
             <li><strong>Compatible</strong><span>iPhone &amp; Android</span></li>
-            <li><strong>Delivery</strong><span>typically 3–7 business days</span></li>
+            <li><strong data-delivery-label>{% if selected_is_preorder %}Preorder timing{% else %}Shipping{% endif %}</strong><span data-delivery-message>{{ selected_inventory_message }}</span></li>
             <li><strong>Easy returns</strong><span>{% if shop.refund_policy != blank %}<a href="{{ shop.refund_policy.url }}">View return policy</a>{% else %}Contact us for help{% endif %}</span></li>
           </ul>
           <p class="login-disclaimer"><strong>Optional login:</strong> No login is required to open the daily content. Sign in only if you want to track streaks and Bible reading plan progress.</p>
@@ -148,6 +179,21 @@
         {{ form | payment_button }}
         {% render 'payment-options' %}
       {% endform %}
+      {% if is_bible_band %}
+        <div class="back-in-stock" data-sold-out-signup{% if selected_variant.available %} hidden{% endif %}>
+          <strong>Get a restock alert</strong>
+          <p>We’ll email you when this Bible Band option is available again.</p>
+          {% form 'customer', id: restock_form_id, class: 'back-in-stock__form' %}
+            <input type="hidden" name="contact[tags]" value="back-in-stock,bible-band">
+            <input type="hidden" name="contact[note]" value="{{ selected_variant.title | escape }}" data-restock-variant>
+            <label class="visually-hidden" for="BackInStockEmail-{{ section.id }}">Email address</label>
+            <input id="BackInStockEmail-{{ section.id }}" type="email" name="contact[email]" placeholder="Email address" required>
+            <button class="button" type="submit">Notify me</button>
+            {% if form.posted_successfully? %}<p class="form-success">You’re on the restock list.</p>{% endif %}
+            {{ form.errors | default_errors }}
+          {% endform %}
+        </div>
+      {% endif %}
       {% if section.settings.enable_social_share and is_bible_band == false %}{% render 'product-share', product: product, share_url: canonical_url %}{% endif %}
     </div>
   </div>
@@ -180,7 +226,7 @@
     <span data-sticky-price>{{ product.selected_or_first_available_variant.price | money }}</span>
   </div>
   <button class="button button--gold" type="button" data-sticky-add aria-controls="{{ product_form_id }}"{% unless product.selected_or_first_available_variant.available %} disabled{% endunless %}>
-    {% if selected_is_preorder %}Preorder{% elsif product.selected_or_first_available_variant.available %}{% if is_bible_band %}Get Your Bible Band{% else %}Add to Cart{% endif %}{% else %}Sold out{% endif %}
+    {% if selected_is_preorder %}Preorder now{% elsif product.selected_or_first_available_variant.available %}{% if is_bible_band %}Get Your Bible Band{% else %}Add to Cart{% endif %}{% else %}Sold out{% endif %}
   </button>
 </div>
 
@@ -231,6 +277,10 @@
     { "type": "header", "content": "Proof and tap demonstration" },
     { "type": "text", "id": "problem_heading", "label": "Problem and solution heading", "default": "Keep forgetting your time with God?" },
     { "type": "textarea", "id": "problem_copy", "label": "Problem and solution copy", "default": "Quiet time is easy to plan—and easy to forget. The Bible Band keeps a simple reminder on your wrist: notice it, tap it, and today’s Scripture, devotion, and prayer are ready." },
+    { "type": "header", "content": "Inventory and preorder messaging" },
+    { "type": "range", "id": "low_stock_threshold", "label": "Low-stock threshold", "min": 1, "max": 20, "step": 1, "default": 5 },
+    { "type": "text", "id": "in_stock_message", "label": "In-stock message", "default": "In stock — ships in 1–2 business days." },
+    { "type": "text", "id": "preorder_message", "label": "Preorder message", "default": "Preorder — expected to ship in 3–4 weeks." },
     { "type": "checkbox", "id": "show_demo_video", "label": "Show tap demonstration", "default": true },
     { "type": "video", "id": "demo_video", "label": "3–5 second tap demonstration", "info": "Upload a short, muted clip showing a phone tapping the band and opening the daily experience." },
     { "type": "header", "content": "Featured Bible Band reviews" },
