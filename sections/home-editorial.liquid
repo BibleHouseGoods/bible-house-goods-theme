@@ -70,17 +70,51 @@
           {% assign band_color_key = '|' | append: band_color | append: '|' %}
           {% unless seen_band_colors contains band_color_key %}
             {% assign seen_band_colors = seen_band_colors | append: band_color | append: '|' %}
+            {% liquid
+              assign band_card_image = variant.featured_image | default: section.settings.featured_product.featured_image
+              assign band_card_hover_image = blank
+              if band_color == 'Field Khaki / Retro Duck Camo'
+                for media in section.settings.featured_product.media
+                  if media.media_type == 'image' and media.alt contains 'Retro Duck Camo Bible Band'
+                    assign band_card_image = media.preview_image
+                    break
+                  endif
+                endfor
+                for media in section.settings.featured_product.media
+                  if media.media_type == 'image' and media.alt contains 'Field Khaki'
+                    assign band_card_hover_image = media.preview_image
+                    break
+                  endif
+                endfor
+              elsif band_color == 'Mauve / Cheetah'
+                for media in section.settings.featured_product.media
+                  if media.media_type == 'image' and media.alt contains 'Cheetah'
+                    assign band_card_image = media.preview_image
+                    break
+                  endif
+                endfor
+                for media in section.settings.featured_product.media
+                  if media.media_type == 'image' and media.alt contains 'Mauve'
+                    assign band_card_hover_image = media.preview_image
+                    break
+                  endif
+                endfor
+              endif
+            %}
             <a class="band-shop__card" href="{{ section.settings.featured_product.url }}?variant={{ variant.id }}" data-analytics-event="product_option_selected" data-product-title="{{ section.settings.featured_product.title | escape }}" data-variant-title="{{ band_color | escape }}">
-              <div class="band-shop__image">
-                {% if variant.featured_image != blank %}
-                  {{ variant.featured_image | image_url: width: 900 | image_tag: widths: '300,500,700,900', loading: 'lazy', alt: band_color }}
+              <div class="band-shop__image{% if band_card_hover_image != blank %} band-shop__image--swap{% endif %}">
+                {% if band_card_image != blank %}
+                  {{ band_card_image | image_url: width: 900 | image_tag: class: 'band-shop__image-primary', widths: '300,500,700,900', loading: 'lazy', alt: band_card_image.alt | default: band_color }}
+                  {% if band_card_hover_image != blank %}
+                    {{ band_card_hover_image | image_url: width: 900 | image_tag: class: 'band-shop__image-alternate', widths: '300,500,700,900', loading: 'lazy', alt: band_card_hover_image.alt | default: band_color }}
+                  {% endif %}
                 {% else %}
                   {{ section.settings.featured_product.featured_image | image_url: width: 900 | image_tag: widths: '300,500,700,900', loading: 'lazy', alt: band_color }}
                 {% endif %}
               </div>
               <div class="band-shop__info">
                 <h3>{{ band_color }}</h3>
-                <span>{% if band_color == 'Cobalt Blue / Grey Aztec' or band_color == 'Space Grey / Sport Grey' or band_color == 'Pink Bubblegum / Bubblegum Check' or band_color == 'Maroon / Maroon Aztec' %}Preorder{% else %}Shop now{% endif %} →</span>
+                <span>Choose size →</span>
               </div>
             </a>
           {% endunless %}

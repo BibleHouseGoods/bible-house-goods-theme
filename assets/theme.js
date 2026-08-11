@@ -37,12 +37,63 @@ document.addEventListener('click', (event) => {
   menu.hidden = open;
 });
 
+const updateVariantPurchaseState = (form, select, option) => {
+  const requestedQuantity = Number(form.querySelector('[name="quantity"]')?.value || 1);
+  const inventoryQuantity = Number(option.dataset.inventoryQuantity || 0);
+  const inventoryManaged = option.dataset.inventoryManaged === 'true';
+  const continuesSelling = option.dataset.inventoryPolicy === 'continue';
+  const insufficientStock = inventoryManaged && !continuesSelling && inventoryQuantity > 0 && inventoryQuantity < requestedQuantity;
+  const isPreorder = inventoryManaged && continuesSelling && inventoryQuantity < requestedQuantity;
+  const isLowStock = inventoryManaged && inventoryQuantity > 0 && inventoryQuantity <= Number(select.dataset.lowStockThreshold || 5);
+  const canPurchase = option.dataset.available === 'true' && !insufficientStock;
+  const statusMessage = isPreorder
+    ? select.dataset.preorderMessage
+    : insufficientStock
+      ? `Only ${Math.max(inventoryQuantity, 0)} available — choose a smaller quantity.`
+      : option.dataset.available !== 'true'
+        ? 'Sold out.'
+        : isLowStock ? `Only ${inventoryQuantity} left — ships now.` : select.dataset.inStockMessage;
+  const button = form.querySelector('[data-primary-product-submit]');
+  button.disabled = !canPurchase;
+  button.textContent = isPreorder ? 'Preorder now' : canPurchase ? 'Add to cart' : insufficientStock ? 'Adjust quantity' : 'Sold out';
+  const inventoryStatus = document.querySelector('[data-inventory-status]');
+  if (inventoryStatus) {
+    inventoryStatus.textContent = statusMessage;
+    inventoryStatus.dataset.state = isPreorder ? 'preorder' : isLowStock || insufficientStock ? 'low-stock' : canPurchase ? 'in-stock' : 'sold-out';
+  }
+  document.querySelectorAll('[data-delivery-summary], [data-delivery-message]').forEach((message) => {
+    message.textContent = statusMessage;
+  });
+  const deliveryLabel = document.querySelector('[data-delivery-label]');
+  if (deliveryLabel) deliveryLabel.textContent = isPreorder ? 'Preorder timing' : 'Shipping';
+  const preorderProperty = form.querySelector('[data-preorder-property]');
+  if (preorderProperty) {
+    preorderProperty.disabled = !isPreorder;
+    preorderProperty.value = statusMessage;
+  }
+  const soldOutSignup = document.querySelector('[data-sold-out-signup]');
+  if (soldOutSignup) {
+    soldOutSignup.hidden = option.dataset.available === 'true';
+    const restockVariant = soldOutSignup.querySelector('[data-restock-variant]');
+    if (restockVariant) restockVariant.value = option.dataset.variantTitle;
+  }
+  const stickyButton = document.querySelector('[data-sticky-add]');
+  if (stickyButton) {
+    stickyButton.disabled = button.disabled;
+    stickyButton.textContent = button.textContent === 'Add to cart' && window.location.pathname.includes('/products/the-bible-band')
+      ? 'Get Your Bible Band'
+      : button.textContent;
+  }
+};
+
 document.addEventListener('change', (event) => {
   const bandTier = event.target.closest('[data-band-tier]');
   if (bandTier) {
     const form = bandTier.closest('form');
     const quantity = form.querySelector('[data-band-quantity]');
     quantity.value = bandTier.value;
+    const select = form.querySelector('[data-variant-select]');
+    if (select) updateVariantPurchaseState(form, select, select.options[select.selectedIndex]);
     trackStorefrontEvent('product_option_selected', { purchase_option: `${bandTier.value}_bands` });
     return;
   }
@@ -51,22 +102,11 @@ document.addEventListener('change', (event) => {
   const option = select.options[select.selectedIndex];
   const form = select.closest('form');
   form.querySelector('[name="id"]').value = option.value;
-  const button = form.querySelector('[type="submit"]');
-  button.disabled = option.dataset.available !== 'true';
-  button.textContent = option.dataset.preorder === 'true'
-    ? 'Preorder'
-    : option.dataset.available === 'true' ? 'Add to cart' : 'Sold out';
+  updateVariantPurchaseState(form, select, option);
   const price = document.querySelector('[data-product-price]');
   if (price) price.textContent = option.dataset.price;
   const stickyPrice = document.querySelector('[data-sticky-price]');
   if (stickyPrice) stickyPrice.textContent = option.dataset.price;
-  const stickyButton = document.querySelector('[data-sticky-add]');
-  if (stickyButton) {
-    stickyButton.disabled = button.disabled;
-    stickyButton.textContent = button.textContent === 'Add to cart' && window.location.pathname.includes('/products/the-bible-band')
-      ? 'Get Your Bible Band'
-      : button.textContent;
-  }
   trackStorefrontEvent('product_option_selected', {
     product_title: select.dataset.productTitle,
     variant_id: option.value,
