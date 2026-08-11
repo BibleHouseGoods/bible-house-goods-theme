@@ -77,19 +77,12 @@
       {% if settings.social_etsy_url != blank and is_bible_band == false %}
         <a class="product-review-link" href="{{ settings.social_etsy_url }}" target="_blank" rel="noopener"><span aria-hidden="true">★★★★★</span> Read customer reviews on Etsy ↗</a>
       {% endif %}
-      {% if is_bible_band %}
-        <div class="quiet-time-solution">
-          <span class="eyebrow">{{ 'products.bible_band.problem_kicker' | t }}</span>
-          <h2>{{ section.settings.problem_heading }}</h2>
-          <p>{{ section.settings.problem_copy }}</p>
-        </div>
-      {% endif %}
       {% if is_bible_band and section.settings.show_demo_video %}
-        <aside class="tap-demo tap-demo--early" aria-labelledby="TapDemoTitle-{{ section.id }}">
+        <aside class="tap-demo tap-demo--early tap-demo--hero" aria-labelledby="TapDemoTitle-{{ section.id }}">
           <div class="tap-demo__heading">
-            <span class="eyebrow">{{ 'products.bible_band.tap_demo_kicker' | t }}</span>
-            <h2 id="TapDemoTitle-{{ section.id }}">{{ 'products.bible_band.tap_demo_heading' | t }}</h2>
-            <p>{{ 'products.bible_band.tap_demo_copy' | t }}</p>
+            <span class="eyebrow">{{ 'products.bible_band.tap_demo_heading' | t }}</span>
+            <h2 id="TapDemoTitle-{{ section.id }}">{{ section.settings.problem_heading }}</h2>
+            <p>{{ section.settings.problem_copy }}</p>
           </div>
           <div class="tap-demo__media" data-tap-demo data-demo-duration="5">
             {% if section.settings.demo_video != blank %}
