@@ -43,9 +43,9 @@
           -%}
           {{ section.settings.hero_video | video_tag: autoplay: true, loop: true, muted: true, controls: false, playsinline: true, preload: 'metadata', poster: video_poster_url, image_size: '2000x' }}
         {% elsif section.settings.hero_image != blank %}
-          {{ section.settings.hero_image | image_url: width: 1400 | image_tag: widths: '500,750,1000,1400', fetchpriority: 'high', alt: section.settings.hero_image.alt | default: section.settings.heading }}
+          {{ section.settings.hero_image | image_url: width: 1400 | image_tag: widths: '500,750,1000,1400', sizes: '(min-width: 1001px) 45vw, 100vw', fetchpriority: 'high', alt: section.settings.hero_image.alt | default: section.settings.heading }}
         {% elsif section.settings.featured_product != blank and section.settings.featured_product.featured_image != blank %}
-          {{ section.settings.featured_product.featured_image | image_url: width: 1400 | image_tag: widths: '500,750,1000,1400', fetchpriority: 'high', alt: section.settings.featured_product.title }}
+          {{ section.settings.featured_product.featured_image | image_url: width: 1400 | image_tag: widths: '500,750,1000,1400', sizes: '(min-width: 1001px) 45vw, 100vw', fetchpriority: 'high', alt: section.settings.featured_product.title }}
         {% else %}<span>Add a Bible Band™ image</span>{% endif %}
       </div>
     </div>
@@ -104,12 +104,12 @@
             <a class="band-shop__card" href="{{ section.settings.featured_product.url }}?variant={{ variant.id }}" data-analytics-event="product_option_selected" data-product-title="{{ section.settings.featured_product.title | escape }}" data-variant-title="{{ band_color | escape }}">
               <div class="band-shop__image{% if band_card_hover_image != blank %} band-shop__image--swap{% endif %}">
                 {% if band_card_image != blank %}
-                  {{ band_card_image | image_url: width: 900 | image_tag: class: 'band-shop__image-primary', widths: '300,500,700,900', loading: 'lazy', alt: band_card_image.alt | default: band_color }}
+                  {{ band_card_image | image_url: width: 900 | image_tag: class: 'band-shop__image-primary', widths: '300,500,700,900', sizes: '(min-width: 1001px) 16vw, (min-width: 641px) 33vw, 50vw', loading: 'lazy', alt: band_card_image.alt | default: band_color }}
                   {% if band_card_hover_image != blank %}
-                    {{ band_card_hover_image | image_url: width: 900 | image_tag: class: 'band-shop__image-alternate', widths: '300,500,700,900', loading: 'lazy', alt: band_card_hover_image.alt | default: band_color }}
+                    {{ band_card_hover_image | image_url: width: 900 | image_tag: class: 'band-shop__image-alternate', widths: '300,500,700,900', sizes: '(min-width: 1001px) 16vw, (min-width: 641px) 33vw, 50vw', loading: 'lazy', alt: band_card_hover_image.alt | default: band_color }}
                   {% endif %}
                 {% else %}
-                  {{ section.settings.featured_product.featured_image | image_url: width: 900 | image_tag: widths: '300,500,700,900', loading: 'lazy', alt: band_color }}
+                  {{ section.settings.featured_product.featured_image | image_url: width: 900 | image_tag: widths: '300,500,700,900', sizes: '(min-width: 1001px) 16vw, (min-width: 641px) 33vw, 50vw', loading: 'lazy', alt: band_color }}
                 {% endif %}
               </div>
               <div class="band-shop__info">
@@ -337,7 +337,7 @@
 <section class="quote-section"><div class="page-width"><blockquote>“{{ section.settings.quote }}”<cite>{{ section.settings.quote_cite }}</cite></blockquote></div></section>
 
 <section class="founder"><div class="page-width founder__grid">
-  <div class="founder__photo">{% if section.settings.founder_image != blank %}{{ section.settings.founder_image | image_url: width: 1200 | image_tag: widths: '500,800,1200', loading: 'lazy', alt: section.settings.founder_image.alt | default: 'Bible House Goods founder' }}{% else %}<img src="{{ 'founders.jpeg' | asset_url }}" alt="Clark Whitney and his wife" width="1200" height="900" loading="lazy">{% endif %}</div>
+  <div class="founder__photo">{% if section.settings.founder_image != blank %}{{ section.settings.founder_image | image_url: width: 1200 | image_tag: widths: '500,800,1200', sizes: '(min-width: 1001px) 40vw, 100vw', loading: 'lazy', alt: section.settings.founder_image.alt | default: 'Bible House Goods founder' }}{% else %}<img src="{{ 'founders.jpeg' | asset_url }}" alt="Clark Whitney and his wife" width="1000" height="1487" loading="lazy">{% endif %}</div>
   <div class="founder__copy"><span class="eyebrow">Our Story</span><h2 class="section-title">{{ section.settings.founder_heading }}</h2><p>{{ section.settings.founder_copy }}</p><a class="button" href="{{ section.settings.founder_link }}">Read Our Story</a></div>
 </div></section>
 

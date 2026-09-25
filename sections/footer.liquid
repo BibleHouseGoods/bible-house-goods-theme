@@ -26,7 +26,7 @@
       {% if settings.social_facebook_url != blank %}<a href="{{ settings.social_facebook_url }}" target="_blank" rel="noopener">Facebook ↗</a>{% endif %}
     </nav>
   {% endif %}
-  <div class="footer-wordmark page-width">{% if settings.logo != blank %}{{ settings.logo | image_url: width: 1200 | image_tag: widths: '400,800,1200', alt: shop.name }}{% else %}<img src="{{ 'bible-house-logo.png' | asset_url }}" alt="{{ shop.name }}" width="1200" height="400">{% endif %}</div>
+  <div class="footer-wordmark page-width">{% if settings.logo != blank %}{{ settings.logo | image_url: width: 1200 | image_tag: widths: '400,800,1200', loading: 'lazy', alt: shop.name }}{% else %}<img src="{{ 'bible-house-logo.png' | asset_url }}" alt="{{ shop.name }}" width="600" height="600" loading="lazy">{% endif %}</div>
   <div class="page-width footer-bottom"><p>© {{ 'now' | date: '%Y' }} {{ shop.name }}</p><div>{% for policy in shop.policies %}{% if policy != blank %}<a href="{{ policy.url }}">{{ policy.title }}</a>{% endif %}{% endfor %}</div></div>
 </footer>
 {% stylesheet %}
