@@ -1,7 +1,7 @@
 <a class="product-card" href="{{ product.url }}">
   <div class="product-card__image">
     {% if product.featured_image != blank %}
-      {{ product.featured_image | image_url: width: 900 | image_tag: widths: '240,360,540,720,900', loading: 'lazy', alt: product.featured_image.alt | default: product.title }}
+      {{ product.featured_image | image_url: width: 900 | image_tag: widths: '240,360,540,720,900', sizes: '(min-width: 1001px) 25vw, 50vw', loading: 'lazy', alt: product.featured_image.alt | default: product.title }}
     {% else %}
       {{ 'product-1' | placeholder_svg_tag }}
     {% endif %}

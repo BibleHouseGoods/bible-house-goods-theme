@@ -33,7 +33,7 @@ Renders the compact Bible Band review gallery inside the product media column.
       %}
       <article class="featured-review">
         <div class="featured-review__image">
-          {{ review_image | image_url: width: 900 | image_tag: widths: '320,520,720,900', loading: 'lazy', alt: product.title }}
+          {{ review_image | image_url: width: 900 | image_tag: widths: '320,520,720,900', sizes: '(min-width: 1001px) 20vw, (min-width: 641px) 100vw, 80vw', loading: 'lazy', alt: product.title }}
           {%- comment -%} Only a real customer photo gets a caption. Store photography is left unlabeled: putting a reviewer's name on it would suggest they took it. {%- endcomment -%}
           {%- if section.settings[image_key] != blank -%}
             <span>{{ 'products.bible_band.customer_photo' | t }}{% if section.settings[author_key] != blank and section.settings[author_key] != 'Bible Band customer' %} · {{ section.settings[author_key] }}{% endif %}</span>

@@ -49,9 +49,9 @@
             <div class="product-gallery__item" data-product-gallery-slide data-media-id="{{ media.id }}">
               {% if media.media_type == 'image' %}
                 {% if forloop.first %}
-                  {{ media | image_url: width: 1600 | image_tag: widths: '400,700,1000,1600', loading: 'eager', fetchpriority: 'high', alt: media.alt | default: product.title }}
+                  {{ media | image_url: width: 1600 | image_tag: widths: '400,700,1000,1600', sizes: '(min-width: 1001px) min(55vw, 760px), 100vw', loading: 'eager', fetchpriority: 'high', alt: media.alt | default: product.title }}
                 {% else %}
-                  {{ media | image_url: width: 1600 | image_tag: widths: '400,700,1000,1600', loading: 'lazy', alt: media.alt | default: product.title }}
+                  {{ media | image_url: width: 1600 | image_tag: widths: '400,700,1000,1600', sizes: '(min-width: 1001px) min(55vw, 760px), 100vw', loading: 'lazy', alt: media.alt | default: product.title }}
                 {% endif %}
               {% else %}
                 {% if is_bible_band and forloop.first and media.media_type == 'video' %}
@@ -70,7 +70,7 @@
               {%- if v.option1 contains 'Medium' and v.featured_media != blank and v.featured_media.position > gallery_limit and v.featured_media.media_type == 'image' -%}
                 {%- assign color_slide_alt = v.featured_media.alt | default: v.option2 -%}
                 <div class="product-gallery__item" data-product-gallery-slide data-media-id="{{ v.featured_media.id }}">
-                  {{ v.featured_media | image_url: width: 1600 | image_tag: widths: '400,700,1000,1600', loading: 'lazy', alt: color_slide_alt }}
+                  {{ v.featured_media | image_url: width: 1600 | image_tag: widths: '400,700,1000,1600', sizes: '(min-width: 1001px) min(55vw, 760px), 100vw', loading: 'lazy', alt: color_slide_alt }}
                 </div>
               {%- endif -%}
             {%- endfor -%}
@@ -232,7 +232,7 @@
     <div class="page-width mark-testimonial__layout">
       <div class="mark-testimonial__image">
         {% if section.settings.mark_testimonial_image != blank %}
-          {{ section.settings.mark_testimonial_image | image_url: width: 1200 | image_tag: widths: '360,560,760,1000,1200', loading: 'lazy', alt: section.settings.mark_testimonial_name }}
+          {{ section.settings.mark_testimonial_image | image_url: width: 1200 | image_tag: widths: '360,560,760,1000,1200', sizes: '(min-width: 901px) 40vw, (min-width: 641px) 560px, 100vw', loading: 'lazy', alt: section.settings.mark_testimonial_name }}
         {% else %}
           <img src="https://cdn.shopify.com/s/files/1/0966/1972/4984/files/mark-hatley-bible-band-testimonial.jpg?v=1785633674" loading="lazy" width="960" height="960" alt="{{ section.settings.mark_testimonial_name | escape }}">
         {% endif %}
