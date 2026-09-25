@@ -1,0 +1,69 @@
+{%- comment -%}
+  Bible Band FAQ accordion, shown on the product page.
+  Only renders for the Bible Band product.
+{%- endcomment -%}
+{% if product.handle == 'the-bible-band' and section.settings.show_faq %}
+  <section class="product-faq" aria-labelledby="ProductFaq-{{ section.id }}">
+    <div class="page-width--narrow">
+      <span class="eyebrow">{{ section.settings.kicker }}</span>
+      <h2 class="section-title" id="ProductFaq-{{ section.id }}">{{ section.settings.heading }}</h2>
+
+      <div class="product-faq__group">
+        <h3 class="product-faq__group-title">Before you buy</h3>
+        <details class="product-faq__item"><summary>Which size should I get?</summary><div class="rte"><p>Youth / Small is 160 mm (6.3 in). Medium is 180 mm (7.1 in). Large is 195 mm (7.7 in). XL is 205 mm (8.1 in). Not sure? Wrap a strip of paper around your wrist, mark where it overlaps, and measure it flat against a ruler. If you&rsquo;re between sizes, size up.</p></div></details>
+        <details class="product-faq__item"><summary>Can I mix sizes and colors in a 2, 3, or 4-pack?</summary><div class="rte"><p>Yes. Build your pack however you like &mdash; any combination of sizes and colors. The multi-band discount applies automatically, so a family can order four different colors in three different sizes and still get the 4-pack price.</p></div></details>
+        <details class="product-faq__item"><summary>What happens if my size is on preorder?</summary><div class="rte"><p>That size and color is on the way but not in stock yet. You can order it now and it is expected to ship in 3–4 weeks, at the same price. If your order mixes preorder and in-stock bands, everything ships together when all bands are ready. If the timing changes, we will email you with the option to accept the delay or cancel for a refund.</p></div></details>
+        <details class="product-faq__item"><summary>Is it a good gift?</summary><div class="rte"><p>It&rsquo;s one of the most meaningful Christian gifts you can give &mdash; practical, purposeful, and it points to Scripture every day. Popular for baptisms, graduations, new believers, men&rsquo;s and women&rsquo;s ministry, and youth groups. There&rsquo;s nothing to set up, so it works even for someone who isn&rsquo;t tech-savvy. You can add a free gift note in your cart.</p></div></details>
+        <details class="product-faq__item"><summary>How long does shipping take?</summary><div class="rte"><p>In-stock orders typically arrive in 5&ndash;10 business days within the United States, and shipping is free on every Bible Band order.</p></div></details>
+      </div>
+
+      <div class="product-faq__group">
+        <h3 class="product-faq__group-title">How it works</h3>
+        <details class="product-faq__item"><summary>Do I need an app or a subscription?</summary><div class="rte"><p>Neither. Tap the band and your phone opens a web page &mdash; no App Store, no download, no login, no account. There is no monthly fee and no paywall. You pay once and the daily content is free to access every day.</p></div></details>
+        <details class="product-faq__item"><summary>Will it work with my phone?</summary><div class="rte"><p>Yes, for iPhone 7 and newer and most Android phones made after 2018. On iPhone XS and newer, NFC runs in the background &mdash; just tap. On iPhone 7 and 8, open Control Center and tap the NFC icon first. Hold the <strong>top edge</strong> of an iPhone or the <strong>center back</strong> of an Android near the chip.</p></div></details>
+        <details class="product-faq__item"><summary>What is NFC, and is it safe?</summary><div class="rte"><p>NFC is the same short-range technology behind Apple Pay, hotel keys, and transit cards. The chip inside the band has no battery and never needs charging. It only opens a web page &mdash; it does not collect data, track your location, or access your phone.</p></div></details>
+        <details class="product-faq__item"><summary>What opens when I tap it?</summary><div class="rte"><p>A daily page with Scripture, a pastor-written devotion, guided prayer, an audio version, large-print text, and a free One-Year Bible Reading Plan. New content every day, and past days stay available if you miss one.</p></div></details>
+        <details class="product-faq__item"><summary>Nothing happened when I tapped. What now?</summary><div class="rte"><ol><li>Make sure your screen is on and unlocked.</li><li>Try a different spot &mdash; top edge on iPhone, center back on Android. Move slowly.</li><li>Remove your phone case. Thick, metal, or magnetic wallet cases block the signal.</li><li>Hold steady for 2&ndash;3 seconds instead of tapping quickly.</li></ol><p><a href="/pages/how-to-use-your-bible-band">See the full step-by-step guide &rarr;</a></p></div></details>
+      </div>
+
+      <div class="product-faq__group">
+        <h3 class="product-faq__group-title">The content &amp; the band</h3>
+        <details class="product-faq__item"><summary>Who writes the devotions?</summary><div class="rte"><p>Every devotion is written and personally reviewed by Pastor Clark Whitney, an active pastor in South Arkansas with a Doctor of Education in Christian Leadership. Not AI &mdash; written with biblical faithfulness and real pastoral care.</p></div></details>
+        <details class="product-faq__item"><summary>Can I wear it in water, or sleep in it?</summary><div class="rte"><p>It&rsquo;s fine for everyday wear and hand-washing, and many people wear it around the clock. We recommend taking it off before swimming, showering, or long water exposure.</p></div></details>
+        <details class="product-faq__item"><summary>Can we use it for family devotions or a small group?</summary><div class="rte"><p>Absolutely. Families tap together and read the Scripture and devotion as a group. Small groups, youth groups, and accountability partners all land on the same daily content, which makes it a shared point of connection. For churches and groups, see our <a href="/pages/bible-band-church-packs">Church Packs</a>.</p></div></details>
+      </div>
+
+      <p class="product-faq__more">{{ section.settings.footer_text }} <a href="/pages/contact">Contact us</a> and Pastor Clark or a team member will get back to you personally.</p>
+    </div>
+  </section>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Product FAQ",
+  "settings": [
+    { "type": "checkbox", "id": "show_faq", "label": "Show FAQ on the product page", "default": true },
+    { "type": "text", "id": "kicker", "label": "Kicker", "default": "Questions? We've got answers." },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Everything You Might Be Wondering" },
+    { "type": "text", "id": "footer_text", "label": "Closing line", "default": "Still have a question?" }
+  ],
+  "presets": [{ "name": "Product FAQ" }]
+}
+{% endschema %}
+
+{% stylesheet %}
+  .product-faq{padding:clamp(48px,6vw,84px) 0;background:var(--tan);color:var(--ink);border-top:2px solid var(--ink)}
+  .product-faq .section-title{margin:6px 0 30px;font-size:clamp(32px,4.4vw,54px);letter-spacing:-.04em;line-height:1.02;text-transform:uppercase}
+  .product-faq__group{margin-bottom:28px}
+  .product-faq__group-title{margin:0 0 10px;font-size:10px;font-weight:950;letter-spacing:1.6px;text-transform:uppercase;opacity:.7}
+  .product-faq__item{border-top:1px solid var(--ink)}
+  .product-faq__item:last-child{border-bottom:1px solid var(--ink)}
+  .product-faq__item summary{padding:14px 0;font-size:15px;font-weight:800;line-height:1.4;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:16px;align-items:baseline}
+  .product-faq__item summary::-webkit-details-marker{display:none}
+  .product-faq__item summary::after{content:'+';flex:none;font-size:18px;font-weight:800;line-height:1}
+  .product-faq__item[open] summary::after{content:'\2212'}
+  .product-faq__item .rte{padding:0 0 16px;font-size:14.5px;line-height:1.65;max-width:66ch}
+  .product-faq__item .rte ol{margin:0 0 10px;padding-left:20px}
+  .product-faq__item .rte li{margin-bottom:5px}
+  .product-faq__more{margin:26px 0 0;font-size:13px;line-height:1.6}
+{% endstylesheet %}

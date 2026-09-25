@@ -1,0 +1,180 @@
+{% doc %}
+  @prompt
+    Fix mobile overflow issues on the product page. Multiple elements are spilling outside the viewport on mobile, including: the video player, a variant selector ("Choose Your Band"), the Add to Cart button, and the Buy with Shop Pay button. Add custom CSS to constrain all product section elements to max-width: 100%, make the video responsive with preserved aspect ratio, and prevent horizontal overflow on the page. Use a style tag only with mobile-targeted media queries where appropriate., ok it's still a little cut off.. the tap. open. begin. piece is and the content above and below it
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-mobile-overflow-fix-{{ ai_gen_id }} {
+    display: block;
+    width: 100%;
+  }
+
+  @media screen and (max-width: 749px) {
+    .product,
+    .product__info-container,
+    .product__media-wrapper,
+    .product__media-list,
+    .product-form,
+    .product-form__buttons,
+    .shopify-payment-button,
+    .product__media-item,
+    .product-media-modal__content,
+    .variant-picker,
+    .variant-picker__option,
+    .product__title,
+    .product__description,
+    .product__info-wrapper,
+    .product-form__input,
+    .product-form__submit,
+    button[name="add"],
+    .shopify-payment-button__button,
+    .shopify-payment-button__button--unbranded {
+      max-width: 100% !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      overflow-x: hidden !important;
+    }
+
+    .product__media-item iframe,
+    .product__media-item video,
+    .product__media-item img,
+    .product-media-modal__content iframe,
+    .product-media-modal__content video {
+      max-width: 100% !important;
+      width: 100% !important;
+      height: auto !important;
+      box-sizing: border-box !important;
+    }
+
+    .product__media-item {
+      position: relative !important;
+      padding-bottom: 56.25% !important;
+      height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    .product__media-item iframe,
+    .product__media-item video {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .variant-picker__label,
+    .product-form__label {
+      max-width: 100% !important;
+      word-wrap: break-word !important;
+      overflow-wrap: break-word !important;
+    }
+
+    .product-form__buttons {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px !important;
+      width: 100% !important;
+    }
+
+    .product-form__submit,
+    .shopify-payment-button {
+      width: 100% !important;
+      flex: 1 !important;
+    }
+
+    body,
+    html {
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+    }
+
+    .page-width,
+    .container,
+    .main-content,
+    #MainContent {
+      max-width: 100% !important;
+      overflow-x: hidden !important;
+      padding-left: 15px !important;
+      padding-right: 15px !important;
+      box-sizing: border-box !important;
+    }
+
+    section,
+    div,
+    p,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    span,
+    a,
+    button,
+    ul,
+    ol,
+    li {
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      overflow-wrap: break-word !important;
+      word-wrap: break-word !important;
+    }
+
+    img,
+    video,
+    iframe,
+    embed,
+    object {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
+    .rte,
+    .rte *,
+    .product__text,
+    .product__text *,
+    [class*="text"],
+    [class*="content"],
+    [class*="description"] {
+      max-width: 100% !important;
+      overflow-x: hidden !important;
+      word-break: break-word !important;
+      overflow-wrap: break-word !important;
+    }
+
+    .multicolumn,
+    .multicolumn-list,
+    .multicolumn-card,
+    .grid,
+    .grid__item,
+    [class*="column"],
+    [class*="col-"] {
+      max-width: 100% !important;
+      width: 100% !important;
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+      box-sizing: border-box !important;
+      overflow-x: hidden !important;
+    }
+  }
+{% endstyle %}
+
+<div class="ai-mobile-overflow-fix-{{ ai_gen_id }}" {{ block.shopify_attributes }}></div>
+
+{% schema %}
+{
+  "name": "Mobile overflow fix",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "This block adds CSS to fix mobile overflow issues on product pages. It constrains all product elements to the viewport width and makes videos responsive. No configuration needed."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Mobile overflow fix"
+    }
+  ]
+}
+{% endschema %}

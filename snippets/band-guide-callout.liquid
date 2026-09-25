@@ -1,0 +1,24 @@
+{%- comment -%} Reusable "how to use your Bible Band" callout. Optional: variant ('compact' | 'wide'), heading, copy {%- endcomment -%}
+<aside class="guide-callout{% if variant == 'compact' %} guide-callout--compact{% endif %}{% if variant == 'wide' %} guide-callout--wide{% endif %}">
+  <div class="guide-callout__body">
+    <span class="guide-callout__tag">New to NFC?</span>
+    <p class="guide-callout__lead">{{ heading | default: 'It takes about 30 seconds to start.' }}</p>
+    <p class="guide-callout__copy">{{ copy | default: 'Wear it, tap it, and today&rsquo;s Scripture opens. No app, no login, nothing to set up. Our step-by-step guide walks you through the first tap on iPhone and Android.' }}</p>
+  </div>
+  <a class="button button--gold guide-callout__cta" href="/pages/how-to-use-your-bible-band" data-analytics-event="guide_callout_click">How To Use Your Bible Band &rarr;</a>
+</aside>
+<style>
+  .guide-callout{display:grid;gap:14px;margin:0;padding:18px 20px;border:2px solid var(--ink);background:var(--tan);color:var(--ink)}
+  .guide-callout__tag{display:block;margin-bottom:6px;font-size:10px;font-weight:950;letter-spacing:1.4px;text-transform:uppercase}
+  .guide-callout__lead{margin:0 0 6px;font-family:var(--font-heading);font-size:19px;font-weight:850;letter-spacing:-.02em;line-height:1.2}
+  .guide-callout__copy{margin:0;font-size:14px;line-height:1.55}
+  .guide-callout__cta{justify-self:start}
+  .guide-callout--compact{margin:34px 0}
+  .guide-callout--wide{padding:26px 28px;box-shadow:8px 8px 0 var(--gold)}
+  .guide-callout--wide .guide-callout__lead{font-size:clamp(22px,2.6vw,30px)}
+  .guide-callout--wide .guide-callout__copy{max-width:62ch;font-size:15px}
+  @media(min-width:760px){
+    .guide-callout--compact,.guide-callout--wide{grid-template-columns:1fr auto;align-items:center;gap:28px}
+    .guide-callout--compact .guide-callout__cta,.guide-callout--wide .guide-callout__cta{justify-self:end}
+  }
+</style>

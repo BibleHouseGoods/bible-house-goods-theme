@@ -1,10 +1,16 @@
 <!doctype html>
 <html class="no-js" lang="{{ request.locale.iso_code }}">
   <head>
+    <meta name="google-site-verification" content="1LOWbiP6EQQ027ZKyS9XvjTCfAyyAGw-g1raFZzsvPE">
     <meta charset="utf-8">
+    {% render 'copyright-meta' %}
+    {%- if request.page_type == 'index' and request.design_mode == false -%}
+      <script>window.location.replace('/products/the-bible-band');</script>
+      <noscript><meta http-equiv="refresh" content="0;url=/products/the-bible-band"></noscript>
+    {%- endif -%}
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="theme-color" content="{{ settings.deep_black }}">
-    <link rel="canonical" href="{{ canonical_url }}">
+    <link rel="canonical" href="{% if request.page_type == 'index' %}{{ shop.url }}/products/the-bible-band{% else %}{{ canonical_url }}{% endif %}">
     {%- if settings.favicon != blank -%}
       <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
     {%- endif -%}
@@ -21,7 +27,9 @@
       {% if body_font_bold %}{{ body_font_bold | font_face: font_display: 'swap' }}{% endif %}
     </style>
     {{ 'base.css' | asset_url | stylesheet_tag }}
+    {{ 'gallery-landscape.css' | asset_url | stylesheet_tag }}
     <script src="{{ 'theme.js' | asset_url }}" defer></script>
+    <script src="{{ 'chat-icon-only.js' | asset_url }}" defer></script>
     <style>
       :root {
         --ink: #000000;
@@ -38,9 +46,115 @@
         --font-body-weight: {{ settings.body_font.weight }};
         --font-body-size: {{ settings.body_font_size }}px;
       }
+
+      /* ---------------------------------------------------------------
+         CONVERSION FIX 1 — sans-serif body text.
+         base.css sets `body{font-family:var(--font-body)}` and then, on the
+         very next line, `body,input,button,select,textarea{font:inherit}`.
+         The `font` shorthand resets font-family, so <body> inherited from
+         <html>, which has no font set -> browser default Times (serif).
+         Restoring the intended body font here.
+         --------------------------------------------------------------- */
+      body {
+        font-family: var(--font-body);
+        font-style: var(--font-body-style);
+        font-weight: var(--font-body-weight);
+        font-size: var(--font-body-size);
+      }
+
+      /* ---------------------------------------------------------------
+         CONVERSION FIX 2 — mobile product page stacking order.
+         base.css contains a malformed fragment (`100%}`) from a truncated
+         media query. It swallowed the rules below, so the gallery / buy
+         panel / details / reviews were stacking in raw DOM order on mobile.
+         Verified missing at runtime before restoring.
+         --------------------------------------------------------------- */
+      @media (max-width: 1000px) {
+        .product-gallery-wrap { order: 1; }
+        .product-info { order: 2; }
+        .product-details { order: 3; }
+        .featured-reviews--column { order: 4; }
+      }
+
+      /* ---------------------------------------------------------------
+         CONVERSION FIX 3 — primary buy button.
+         Was .button (near-black on cream), which read as a notification
+         banner rather than a control — especially with a full sentence as
+         its label. Gold matches the mobile sticky purchase bar and
+         separates it from the purple Shop Pay button directly below.
+         --------------------------------------------------------------- */
+      .product-form [data-primary-product-submit] {
+        border-color: var(--gold);
+        background: var(--gold);
+        color: var(--ink);
+      }
+      .product-form [data-primary-product-submit]:hover:not(:disabled) {
+        border-color: var(--ink);
+        background: var(--ink);
+        color: var(--gold);
+      }
+      .product-form [data-primary-product-submit]:disabled {
+        border-color: var(--tan);
+        background: var(--tan);
+        color: var(--brown);
+        cursor: not-allowed;
+      }
+
+      /* ---------------------------------------------------------------
+         CONVERSION FIX 4 — gift upsell moved below the buy button.
+         The $6 gift-ready add-on sat between the size guide and the buy
+         button, pushing the primary action further down the mobile scroll.
+         .product-form is a grid, so its children can be reordered with
+         `order` — no markup change, nothing to break.
+         Result: button -> Shop Pay -> payment icons -> gift add-on.
+         --------------------------------------------------------------- */
+      .product-form .product-gift-ready { order: 1; }
+      .product-form .purchase-reassurance { order: 2; }
+      .product-form .product-impact { order: 3; }
+
+      /* ---------------------------------------------------------------
+         BUG FIX — two stacked chat widgets on the mobile product page.
+         Shopify Inbox (the "Chat" pill) and Klaviyo's floating launcher
+         (.kl-hub-launcher-container, the round black icon) both float at
+         the bottom right. The Klaviyo launcher lands on top of the sticky
+         "Choose my band" button and clips its label. The sticky bar only
+         exists at <=640px, so hide the Klaviyo launcher there and leave
+         Inbox as the single chat entry point. Email capture is still
+         available in the page footer form.
+         The Inbox pill itself is made icon-only on phones by assets/chat-icon-only.js.
+         --------------------------------------------------------------- */
+      @media (max-width: 640px) {
+        .template-bible-band .kl-hub-launcher-container { display: none !important; }
+      }
+
+      /* ---------------------------------------------------------------
+         PHASE 1 — mobile first screen.
+         (a) The descriptor sentence now sits directly under the title
+             (moved in main-product.liquid); tightened to sit under the h1.
+         (b) 44px tap targets. Header buttons get real height. Small text
+             links keep their look; an invisible ::after enlarges only the
+             hit area, so nothing shifts.
+         --------------------------------------------------------------- */
+      .product-info h1 + .band-benefit-copy { margin: 0 0 14px; font-size: 15px; line-height: 1.45; }
+      @media (max-width: 1000px) {
+        .cart-link,
+        .menu-toggle { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding-block: 0; }
+      }
+      @media (max-width: 1000px), (pointer: coarse) {
+        .product-rating-summary > a,
+        .purchase-reassurance a,
+        .featured-reviews__link,
+        .mark-testimonial__copy > a,
+        .pack-bulk-note a { position: relative; }
+        .product-rating-summary > a::after,
+        .purchase-reassurance a::after,
+        .featured-reviews__link::after,
+        .mark-testimonial__copy > a::after,
+        .pack-bulk-note a::after { content: ''; position: absolute; inset: -16px -8px; }
+      }
     </style>
   </head>
-  <body>
+  <body{% if product.handle == 'the-bible-band' %} class="template-bible-band"{% endif %}>
     <a class="skip-link" href="#MainContent">Skip to content</a>
     {% sections 'header-group' %}
     <main id="MainContent" tabindex="-1">{{ content_for_layout }}</main>

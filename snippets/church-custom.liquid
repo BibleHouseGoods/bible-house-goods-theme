@@ -1,0 +1,58 @@
+{%- comment -%} Custom church destinations — available as a done-for-you build, scoped in the quote. {%- endcomment -%}
+<section class="church-hub" id="church-custom">
+  <div class="page-width">
+    <div class="church-section-head church-section-head--split church-hub__head">
+      <div>
+        <span class="eyebrow">{{ section.settings.custom_kicker }}</span>
+        <h2 class="section-title">{{ section.settings.custom_heading }}</h2>
+      </div>
+      <p>{{ section.settings.custom_intro }}</p>
+    </div>
+
+    <div class="church-hub__layout">
+      <article class="church-prayer-card">
+        <div class="church-prayer-card__top">
+          <span>Your own domain</span>
+          <span aria-hidden="true">✦</span>
+        </div>
+        <div class="church-prayer-card__body">
+          <p class="church-prayer-card__days">Point it</p>
+          <h3>Anywhere</h3>
+          <p>Your bands don&rsquo;t have to open our site. We can point them at your church&rsquo;s own domain, or build you a page and host it &mdash; whichever is simpler for your team to keep current.</p>
+        </div>
+        <div class="church-prayer-card__progress" aria-label="Custom setup">
+          {% for day in (1..21) %}<span{% if day <= 21 %} class="is-active"{% endif %}></span>{% endfor %}
+        </div>
+      </article>
+
+      <div class="church-hub__links" aria-label="Custom church destinations">
+        <article class="church-hub-link">
+          <span class="church-hub-link__icon" aria-hidden="true">01</span>
+          <div><span class="church-hub-link__label">Custom build</span><h3>Digital Bulletin</h3><p>Announcements, service details, and important links in one place — without another handout.</p></div>
+          <span class="church-hub-link__arrow" aria-hidden="true">↗</span>
+        </article>
+        <article class="church-hub-link">
+          <span class="church-hub-link__icon" aria-hidden="true">✎</span>
+          <div><span class="church-hub-link__label">Custom build</span><h3>Sermon Notes</h3><p>Help people follow along, revisit the message, and carry one clear takeaway into the week.</p></div>
+          <span class="church-hub-link__arrow" aria-hidden="true">↗</span>
+        </article>
+        <article class="church-hub-link">
+          <span class="church-hub-link__icon" aria-hidden="true">$</span>
+          <div><span class="church-hub-link__label">Custom build</span><h3>Giving Link</h3><p>Make generosity easy to find by pointing straight to your church&rsquo;s secure giving page.</p></div>
+          <span class="church-hub-link__arrow" aria-hidden="true">↗</span>
+        </article>
+        <article class="church-hub-link">
+          <span class="church-hub-link__icon" aria-hidden="true">+</span>
+          <div><span class="church-hub-link__label">Custom build</span><h3>Events &amp; Connect</h3><p>Registrations, prayer requests, newcomer information, groups, and upcoming events.</p></div>
+          <span class="church-hub-link__arrow" aria-hidden="true">↗</span>
+        </article>
+      </div>
+    </div>
+
+    <div class="church-hub__note">
+      <strong>A living link.</strong>
+      <p>{{ section.settings.custom_note }}</p>
+      <a href="#church-inquiry">Tell us what your church needs <span aria-hidden="true">→</span></a>
+    </div>
+  </div>
+</section>

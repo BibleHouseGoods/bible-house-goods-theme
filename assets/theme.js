@@ -14,7 +14,20 @@ const trackStorefrontEvent = (eventName, details = {}) => {
 
 trackStorefrontEvent('storefront_view');
 
-if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+document.querySelectorAll('.product-page--bible-band .product-gallery video[autoplay]').forEach((video) => {
+  if (reducedMotion) {
+    video.pause();
+    video.controls = true;
+    return;
+  }
+  const observer = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) video.play().catch(() => {});
+    else video.pause();
+  }, { threshold: 0.25 });
+  observer.observe(video);
+});
+if (reducedMotion) {
   document.querySelectorAll('.hero__media video, [data-tap-demo] video').forEach((video) => video.pause());
 }
 
@@ -37,63 +50,12 @@ document.addEventListener('click', (event) => {
   menu.hidden = open;
 });
 
-const updateVariantPurchaseState = (form, select, option) => {
-  const requestedQuantity = Number(form.querySelector('[name="quantity"]')?.value || 1);
-  const inventoryQuantity = Number(option.dataset.inventoryQuantity || 0);
-  const inventoryManaged = option.dataset.inventoryManaged === 'true';
-  const continuesSelling = option.dataset.inventoryPolicy === 'continue';
-  const insufficientStock = inventoryManaged && !continuesSelling && inventoryQuantity > 0 && inventoryQuantity < requestedQuantity;
-  const isPreorder = inventoryManaged && continuesSelling && inventoryQuantity < requestedQuantity;
-  const isLowStock = inventoryManaged && inventoryQuantity > 0 && inventoryQuantity <= Number(select.dataset.lowStockThreshold || 5);
-  const canPurchase = option.dataset.available === 'true' && !insufficientStock;
-  const statusMessage = isPreorder
-    ? select.dataset.preorderMessage
-    : insufficientStock
-      ? `Only ${Math.max(inventoryQuantity, 0)} available — choose a smaller quantity.`
-      : option.dataset.available !== 'true'
-        ? 'Sold out.'
-        : isLowStock ? `Only ${inventoryQuantity} left — ships now.` : select.dataset.inStockMessage;
-  const button = form.querySelector('[data-primary-product-submit]');
-  button.disabled = !canPurchase;
-  button.textContent = isPreorder ? 'Preorder now' : canPurchase ? 'Add to cart' : insufficientStock ? 'Adjust quantity' : 'Sold out';
-  const inventoryStatus = document.querySelector('[data-inventory-status]');
-  if (inventoryStatus) {
-    inventoryStatus.textContent = statusMessage;
-    inventoryStatus.dataset.state = isPreorder ? 'preorder' : isLowStock || insufficientStock ? 'low-stock' : canPurchase ? 'in-stock' : 'sold-out';
-  }
-  document.querySelectorAll('[data-delivery-summary], [data-delivery-message]').forEach((message) => {
-    message.textContent = statusMessage;
-  });
-  const deliveryLabel = document.querySelector('[data-delivery-label]');
-  if (deliveryLabel) deliveryLabel.textContent = isPreorder ? 'Preorder timing' : 'Shipping';
-  const preorderProperty = form.querySelector('[data-preorder-property]');
-  if (preorderProperty) {
-    preorderProperty.disabled = !isPreorder;
-    preorderProperty.value = statusMessage;
-  }
-  const soldOutSignup = document.querySelector('[data-sold-out-signup]');
-  if (soldOutSignup) {
-    soldOutSignup.hidden = option.dataset.available === 'true';
-    const restockVariant = soldOutSignup.querySelector('[data-restock-variant]');
-    if (restockVariant) restockVariant.value = option.dataset.variantTitle;
-  }
-  const stickyButton = document.querySelector('[data-sticky-add]');
-  if (stickyButton) {
-    stickyButton.disabled = button.disabled;
-    stickyButton.textContent = button.textContent === 'Add to cart' && window.location.pathname.includes('/products/the-bible-band')
-      ? 'Get Your Bible Band'
-      : button.textContent;
-  }
-};
-
 document.addEventListener('change', (event) => {
   const bandTier = event.target.closest('[data-band-tier]');
   if (bandTier) {
     const form = bandTier.closest('form');
     const quantity = form.querySelector('[data-band-quantity]');
     quantity.value = bandTier.value;
-    const select = form.querySelector('[data-variant-select]');
-    if (select) updateVariantPurchaseState(form, select, select.options[select.selectedIndex]);
     trackStorefrontEvent('product_option_selected', { purchase_option: `${bandTier.value}_bands` });
     return;
   }
@@ -102,18 +64,29 @@ document.addEventListener('change', (event) => {
   const option = select.options[select.selectedIndex];
   const form = select.closest('form');
   form.querySelector('[name="id"]').value = option.value;
-  updateVariantPurchaseState(form, select, option);
+  const button = form.querySelector('[type="submit"]');
+  button.disabled = option.dataset.available !== 'true';
+  button.textContent = option.dataset.order === 'true'
+    ? 'Order'
+    : option.dataset.available === 'true' ? 'Add to cart' : 'Sold out';
   const price = document.querySelector('[data-product-price]');
   if (price) price.textContent = option.dataset.price;
   const stickyPrice = document.querySelector('[data-sticky-price]');
   if (stickyPrice) stickyPrice.textContent = option.dataset.price;
+  const stickyButton = document.querySelector('[data-sticky-add]');
+  if (stickyButton) {
+    stickyButton.disabled = button.disabled;
+    stickyButton.textContent = button.textContent === 'Add to cart' && window.location.pathname.includes('/products/the-bible-band')
+      ? 'Get Your Bible Band'
+      : button.textContent;
+  }
   trackStorefrontEvent('product_option_selected', {
     product_title: select.dataset.productTitle,
     variant_id: option.value,
     variant_title: option.dataset.variantTitle,
     price: option.dataset.price
   });
-  if (option.dataset.mediaId) {
+  if (option.dataset.mediaId && !form.querySelector('[data-band-options]')) {
     const media = document.querySelector(`[data-product-gallery-slide][data-media-id="${option.dataset.mediaId}"]`);
     if (media) {
       media.scrollIntoView({
@@ -139,6 +112,14 @@ document.addEventListener('click', (event) => {
   const stickyButton = event.target.closest('[data-sticky-add]');
   if (stickyButton) {
     const primaryButton = document.querySelector('[data-primary-product-submit]');
+    if (stickyButton.dataset.action === 'choose') {
+      const options = document.querySelector('[data-band-options]');
+      if (options) {
+        options.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+        options.focus({ preventScroll: true });
+      }
+      return;
+    }
     if (primaryButton && !primaryButton.disabled) {
       trackStorefrontEvent('mobile_sticky_cta_click', { label: stickyButton.textContent.trim() });
       primaryButton.click();
@@ -150,7 +131,7 @@ document.addEventListener('click', (event) => {
 });
 
 document.querySelectorAll('.product-form').forEach((form) => {
-  form.addEventListener('submit', () => {
+  form.addEventListener('submit', async (event) => {
     const variantSelect = form.querySelector('[data-variant-select]');
     const selectedOption = variantSelect?.options[variantSelect.selectedIndex];
     trackStorefrontEvent('add_to_cart', {
@@ -160,6 +141,53 @@ document.querySelectorAll('.product-form').forEach((form) => {
       quantity: Number(form.querySelector('[name="quantity"]')?.value || 1),
       purchase_option: form.querySelector('[data-band-tier]:checked')?.value || 'single'
     });
+
+    const giftReady = form.querySelector('[data-gift-ready-variant]:checked');
+    if (!giftReady) return;
+    event.preventDefault();
+
+    const submitter = event.submitter;
+    const status = form.querySelector('[data-gift-ready-status]');
+    const properties = {};
+    new FormData(form).forEach((value, key) => {
+      const match = key.match(/^properties\[(.+)\]$/);
+      if (match && value) properties[match[1]] = value;
+    });
+    if (submitter) {
+      submitter.disabled = true;
+      submitter.setAttribute('aria-busy', 'true');
+    }
+    status.textContent = '';
+
+    try {
+      const response = await fetch(`${window.Shopify.routes.root}cart/add.js`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          items: [
+            {
+              id: Number(form.querySelector('[name="id"]').value),
+              quantity: Math.max(1, Number(form.querySelector('[name="quantity"]')?.value) || 1),
+              properties
+            },
+            {
+              id: Number(giftReady.value),
+              quantity: 1,
+              properties: { 'Gift fulfillment': 'Ship to buyer; include blank gift tag' }
+            }
+          ]
+        })
+      });
+      if (!response.ok) throw new Error('Gift-ready packaging could not be added.');
+      trackStorefrontEvent('gift_option_applied', { gift_option: 'Gift-Ready Packaging', source: 'product' });
+      window.location.assign(`${window.Shopify.routes.root}cart`);
+    } catch (error) {
+      status.textContent = `${error.message} Please try again.`;
+      if (submitter) {
+        submitter.disabled = false;
+        submitter.removeAttribute('aria-busy');
+      }
+    }
   });
 });
 
@@ -192,6 +220,19 @@ document.querySelectorAll('[data-product-gallery]').forEach((gallery) => {
   track.addEventListener('scroll', () => {
     window.requestAnimationFrame(() => { current.textContent = String(activeIndex() + 1); });
   }, { passive: true });
+});
+
+// Picking a color swatch slides the gallery to that color's photo. Only the gallery track
+// moves (horizontal); the page never scrolls, because on phones the buy box sits well below
+// the gallery and a page jump would pull the shopper away from the choice they are making.
+document.addEventListener('click', (event) => {
+  const swatch = event.target.closest('[data-band-color][data-gallery-media]');
+  if (!swatch) return;
+  const slide = document.querySelector(`[data-product-gallery-slide][data-media-id="${swatch.dataset.galleryMedia}"]`);
+  const track = slide && slide.closest('[data-product-gallery-track]');
+  if (!track) return;
+  const left = slide.getBoundingClientRect().left - track.getBoundingClientRect().left + track.scrollLeft;
+  track.scrollTo({ left, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 });
 
 const copyShareUrl = async (share) => {

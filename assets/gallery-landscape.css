@@ -1,0 +1,11 @@
+/* Landscape product gallery — added 2026-08-07.
+   Overrides the 1:1 khaki-letterboxed frame in base.css.
+   To revert: remove this file and its stylesheet_tag in layout/theme.liquid. */
+.product-gallery__item img,
+.product-gallery__item video,
+.product-gallery__item iframe,
+.product-gallery__item model-viewer {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: transparent;
+}

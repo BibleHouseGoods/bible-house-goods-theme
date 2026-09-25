@@ -3,24 +3,21 @@
   if product.handle == 'the-bible-band'
     assign is_bible_band = true
   endif
+  assign current = product.selected_or_first_available_variant
   assign product_form_id = 'ProductForm-' | append: section.id
-  assign restock_form_id = 'BackInStockForm-' | append: section.id
-  assign low_stock_threshold = section.settings.low_stock_threshold | default: 5
+  assign gift_ready_product = all_products['gift-ready-packaging']
+  assign gift_ready_variant = gift_ready_product.selected_or_first_available_variant
   assign gallery_limit = 8
   assign gallery_count = product.media.size | at_most: gallery_limit
-  assign selected_variant = product.selected_or_first_available_variant
-  assign selected_is_preorder = false
-  assign selected_is_low_stock = false
-  assign selected_inventory_message = section.settings.in_stock_message | default: 'In stock — ships in 1–2 business days.'
-  if selected_variant.inventory_management and selected_variant.inventory_quantity <= 0 and selected_variant.inventory_policy == 'continue'
-    assign selected_is_preorder = true
-    assign selected_inventory_message = section.settings.preorder_message | default: 'Preorder — expected to ship in 3–4 weeks.'
-  elsif selected_variant.available == false
-    assign selected_inventory_message = 'Sold out.'
-  elsif selected_variant.inventory_management and selected_variant.inventory_quantity > 0 and selected_variant.inventory_quantity <= low_stock_threshold
-    assign selected_is_low_stock = true
-    assign selected_inventory_message = 'Only ' | append: selected_variant.inventory_quantity | append: ' left — ships now.'
+  assign color_extra_count = 0
+  if is_bible_band
+    for v in product.variants
+      if v.option1 contains 'Medium' and v.featured_media != blank and v.featured_media.position > gallery_limit and v.featured_media.media_type == 'image'
+        assign color_extra_count = color_extra_count | plus: 1
+      endif
+    endfor
   endif
+  assign gallery_count = gallery_count | plus: color_extra_count
   assign demo_media = blank
   for media in product.media
     if media.media_type == 'video' or media.media_type == 'external_video'
@@ -28,13 +25,56 @@
       break
     endif
   endfor
+  assign size_option = blank
+  assign color_option = blank
+  for opt in product.options_with_values
+    if opt.name == 'Size'
+      assign size_option = opt
+    endif
+    if opt.name == 'Color'
+      assign color_option = opt
+    endif
+  endfor
+  assign use_band_options = false
+  if is_bible_band and size_option != blank and color_option != blank
+    assign use_band_options = true
+  endif
 %}
-<section class="product-page page-width">
+<section class="product-page page-width{% if is_bible_band %} product-page--bible-band{% endif %}">
   <div class="product-layout">
     <div class="product-media-column">
       <div class="product-gallery-wrap" data-product-gallery>
         <div class="product-gallery" data-product-gallery-track>
-          {% for media in product.media limit: gallery_limit %}<div class="product-gallery__item" data-product-gallery-slide data-media-id="{{ media.id }}">{% if media.media_type == 'image' %}{% if forloop.first %}{{ media | image_url: width: 1600 | image_tag: widths: '400,700,1000,1600', sizes: '(min-width: 1001px) 55vw, 100vw', fetchpriority: 'high', alt: media.alt | default: product.title }}{% else %}{{ media | image_url: width: 1600 | image_tag: widths: '400,700,1000,1600', sizes: '(min-width: 1001px) 55vw, 100vw', loading: 'lazy', alt: media.alt | default: product.title }}{% endif %}{% else %}{{ media | media_tag: image_size: '1600x' }}{% endif %}</div>{% else %}{{ 'product-1' | placeholder_svg_tag }}{% endfor %}
+          {% for media in product.media limit: gallery_limit %}
+            <div class="product-gallery__item" data-product-gallery-slide data-media-id="{{ media.id }}">
+              {% if media.media_type == 'image' %}
+                {% if forloop.first %}
+                  {{ media | image_url: width: 1600 | image_tag: widths: '400,700,1000,1600', loading: 'eager', fetchpriority: 'high', alt: media.alt | default: product.title }}
+                {% else %}
+                  {{ media | image_url: width: 1600 | image_tag: widths: '400,700,1000,1600', loading: 'lazy', alt: media.alt | default: product.title }}
+                {% endif %}
+              {% else %}
+                {% if is_bible_band and forloop.first and media.media_type == 'video' %}
+                  {{ media | media_tag: image_size: '1600x', autoplay: true, loop: true, muted: true, controls: false, playsinline: true, preload: 'metadata' }}
+                {% else %}
+                  {{ media | media_tag: image_size: '1600x' }}
+                {% endif %}
+              {% endif %}
+            </div>
+          {% else %}
+            {{ 'product-1' | placeholder_svg_tag }}
+          {% endfor %}
+          {%- if is_bible_band -%}
+            {%- comment -%} One extra slide per color whose photo is not already in the first {{ gallery_limit }} slides. The color swatches jump to these. {%- endcomment -%}
+            {%- for v in product.variants -%}
+              {%- if v.option1 contains 'Medium' and v.featured_media != blank and v.featured_media.position > gallery_limit and v.featured_media.media_type == 'image' -%}
+                {%- assign color_slide_alt = v.featured_media.alt | default: v.option2 -%}
+                <div class="product-gallery__item" data-product-gallery-slide data-media-id="{{ v.featured_media.id }}">
+                  {{ v.featured_media | image_url: width: 1600 | image_tag: widths: '400,700,1000,1600', loading: 'lazy', alt: color_slide_alt }}
+                </div>
+              {%- endif -%}
+            {%- endfor -%}
+          {%- endif -%}
         </div>
         {% if gallery_count > 1 %}
           <div class="product-gallery__controls">
@@ -55,7 +95,7 @@
           <div class="product-meta">
             <details><summary>{{ 'products.bible_band.details_heading' | t }}</summary><div class="rte"><p>{{ 'products.bible_band.details_copy' | t }}</p></div></details>
             <details><summary>{{ 'products.bible_band.compatibility_heading' | t }}</summary><div class="rte"><p>{{ 'products.bible_band.compatibility_copy' | t }}</p></div></details>
-            <details><summary>{{ 'products.bible_band.shipping_heading' | t }}</summary><div class="rte"><p><span data-delivery-summary>{{ selected_inventory_message }}</span> Free shipping on Bible Band orders. Visit our FAQ or contact us if you need help.</p></div></details>
+            <details><summary>{{ 'products.bible_band.shipping_heading' | t }}</summary><div class="rte"><p>{{ 'products.bible_band.shipping_copy' | t }}</p></div></details>
           </div>
         {% else %}
           <div class="rte">{{ product.description }}</div>
@@ -69,15 +109,23 @@
     <div class="product-info">
       {% if product.vendor != blank %}<span class="eyebrow">{{ product.vendor }}</span>{% endif %}
       <h1>{% if is_bible_band %}{{ 'products.bible_band.short_title' | t }}{% else %}{% render 'trademark-title', title: product.title %}{% endif %}</h1>
+      {% if is_bible_band %}
+        <p class="band-benefit-copy">{{ 'products.bible_band.mobile_benefit' | t }}</p>
+      {% endif %}
       <div class="product-rating-summary">
         {% render 'judgeme-star-rating', product: product %}
         <a href="#judgeme_product_reviews">{{ 'general.social_proof.judgeme_link' | t }}</a>
       </div>
-      <p class="product-price" data-product-price>{{ product.selected_or_first_available_variant.price | money }}</p>
+      <p class="product-price" data-product-price>{{ current.price | money }}</p>
+      {% if is_bible_band %}
+        <div class="product-quick-proof" aria-label="Bible Band purchase benefits">
+          <span>No app</span><span>No subscription</span><span>Free shipping</span>
+        </div>
+      {% endif %}
       {% if settings.social_etsy_url != blank and is_bible_band == false %}
         <a class="product-review-link" href="{{ settings.social_etsy_url }}" target="_blank" rel="noopener"><span aria-hidden="true">★★★★★</span> Read customer reviews on Etsy ↗</a>
       {% endif %}
-      {% if is_bible_band and section.settings.show_demo_video %}
+      {% if is_bible_band and section.settings.show_demo_video and demo_media == blank %}
         <aside class="tap-demo tap-demo--early tap-demo--hero" aria-labelledby="TapDemoTitle-{{ section.id }}">
           <div class="tap-demo__heading">
             <span class="eyebrow">{{ 'products.bible_band.tap_demo_heading' | t }}</span>
@@ -96,96 +144,83 @@
         </aside>
       {% endif %}
       {% form 'product', product, id: product_form_id, class: 'product-form', data-product-form: '' %}
-        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
-        <input type="hidden" name="properties[Shipping status]" value="{{ selected_inventory_message | escape }}" data-preorder-property{% unless selected_is_preorder %} disabled{% endunless %}>
+        <input type="hidden" name="id" value="{{ current.id }}">
         {% unless product.has_only_default_variant %}
-          <div>
+          {% if use_band_options %}
+            {% render 'band-pack-builder', product: product, section: section, current: current, size_option: size_option, color_option: color_option %}
+          {% endif %}
+          <div class="band-legacy-select{% if use_band_options %} visually-hidden{% endif %}">
             <label class="field-label{% if is_bible_band %} field-label--band-choice{% endif %}" for="Variant-{{ section.id }}">
               {% if is_bible_band %}{{ 'products.bible_band.choose_band' | t }}{% else %}Choose an option{% endif %}
             </label>
-            <select id="Variant-{{ section.id }}" data-variant-select data-product-title="{{ product.title | escape }}" data-in-stock-message="{{ section.settings.in_stock_message | default: 'In stock — ships in 1–2 business days.' | escape }}" data-preorder-message="{{ section.settings.preorder_message | default: 'Preorder — expected to ship in 3–4 weeks.' | escape }}" data-low-stock-threshold="{{ low_stock_threshold }}">
-              {% for variant in product.variants %}
-                {% liquid
-                  assign is_preorder = false
-                  assign is_low_stock = false
-                  assign inventory_message = section.settings.in_stock_message | default: 'In stock — ships in 1–2 business days.'
-                  if variant.inventory_management and variant.inventory_quantity <= 0 and variant.inventory_policy == 'continue'
-                    assign is_preorder = true
-                    assign inventory_message = section.settings.preorder_message | default: 'Preorder — expected to ship in 3–4 weeks.'
-                  elsif variant.available == false
-                    assign inventory_message = 'Sold out.'
-                  elsif variant.inventory_management and variant.inventory_quantity > 0 and variant.inventory_quantity <= low_stock_threshold
-                    assign is_low_stock = true
-                    assign inventory_message = 'Only ' | append: variant.inventory_quantity | append: ' left — ships now.'
-                  endif
-                %}
-                <option value="{{ variant.id }}" data-available="{{ variant.available }}" data-preorder="{{ is_preorder }}" data-low-stock="{{ is_low_stock }}" data-status-message="{{ inventory_message | escape }}" data-inventory-managed="{% if variant.inventory_management %}true{% else %}false{% endif %}" data-inventory-quantity="{{ variant.inventory_quantity }}" data-inventory-policy="{{ variant.inventory_policy }}" data-media-id="{{ variant.featured_media.id }}" data-price="{{ variant.price | money }}" data-variant-title="{{ variant.title | escape }}"{% if variant == product.selected_or_first_available_variant %} selected{% endif %}>{{ variant.title }}{% if is_preorder %} — Preorder{% elsif is_low_stock %} — Only {{ variant.inventory_quantity }} left{% elsif variant.available == false %} — Sold out{% endif %}</option>
-              {% endfor %}
-            </select>
+            <select id="Variant-{{ section.id }}" data-variant-select data-product-title="{{ product.title | escape }}">{% for variant in product.variants %}<option value="{{ variant.id }}" data-available="{{ variant.available }}" data-media-id="{{ variant.featured_media.id }}" data-price="{{ variant.price | money }}" data-variant-title="{{ variant.title | escape }}"{% if variant.id == current.id %} selected{% endif %}>{{ variant.title }}{% unless variant.available %} — Sold out{% endunless %}</option>{% endfor %}</select>
           </div>
+          {% if use_band_options %}<noscript><style>.band-options{display:none !important}.band-legacy-select.visually-hidden{position:static !important;width:auto !important;height:auto !important;margin:0 !important;clip:auto !important;clip-path:none !important;overflow:visible !important;white-space:normal !important}</style></noscript>{% endif %}
         {% endunless %}
-        {% if is_bible_band %}<p class="product-inventory-status" data-inventory-status data-state="{% if selected_is_preorder %}preorder{% elsif selected_is_low_stock %}low-stock{% elsif selected_variant.available %}in-stock{% else %}sold-out{% endif %}" aria-live="polite">{{ selected_inventory_message }}</p>{% endif %}
-        {% if is_bible_band %}
-          <fieldset class="band-tiers" data-band-tiers>
-            <legend class="field-label">{{ 'products.bible_band.quantity_heading' | t }}</legend>
-            <label class="band-tier">
-              <input type="radio" name="band-tier" value="1" checked data-band-tier>
-              <span><strong>{{ 'products.bible_band.tier_one' | t }}</strong><small>{{ 'products.bible_band.tier_one_note' | t }}</small></span>
-              <b>{{ 'products.bible_band.tier_one_price' | t }}</b>
+        {% if is_bible_band and use_band_options == false %}
+          <aside class="size-guidance" aria-label="Bible Band size guidance">
+            <strong>Not sure which size to choose?</strong>
+            <p><strong>Youth / Small</strong> — 160mm (6.3") · <strong>Medium</strong> — 180mm (7.1") · <strong>Large</strong> — 195mm (7.7") · <strong>XL</strong> — 205mm (8.1")</p>
+            <small>Measure snugly around your wrist. If you’re between sizes, size up.</small>
+          </aside>
+        {% endif %}
+        {% if is_bible_band and gift_ready_product != blank and gift_ready_variant.available %}
+          <aside class="product-gift-ready" data-product-gift-ready{% if gift_ready_product.featured_media == blank %} style="grid-template-columns:1fr"{% endif %}>
+            {%- if gift_ready_product.featured_media != blank -%}
+              <img src="{{ gift_ready_product.featured_media | image_url: width: 264 }}" alt="Bible House Goods gift-ready stamped kraft sack with a Bible Band and gift tag" width="900" height="1600" loading="lazy">
+            {%- endif -%}
+            <label>
+              <input type="checkbox" value="{{ gift_ready_variant.id }}" data-gift-ready-variant>
+              <span><strong>Make it gift-ready — {{ gift_ready_variant.price | money }}</strong><small>Stamped kraft sack, colored raffia, and a gift tag—ready for you to give.</small></span>
             </label>
-            <label class="band-tier">
-              <input type="radio" name="band-tier" value="2" data-band-tier>
-              <span><strong>{{ 'products.bible_band.tier_two' | t }}</strong><small>{{ 'products.bible_band.tier_two_note' | t }}</small></span>
-              <b>{{ 'products.bible_band.tier_two_price' | t }}</b>
-            </label>
-            <label class="band-tier">
-              <input type="radio" name="band-tier" value="3" data-band-tier>
-              <span><strong>{{ 'products.bible_band.tier_three' | t }}</strong><small>{{ 'products.bible_band.tier_three_note' | t }}</small></span>
-              <b>{{ 'products.bible_band.tier_three_price' | t }}</b>
-            </label>
-            <label class="band-tier">
-              <input type="radio" name="band-tier" value="4" data-band-tier>
-              <span><strong>{{ 'products.bible_band.tier_four' | t }}</strong><small>{{ 'products.bible_band.tier_four_note' | t }}</small></span>
-              <b>{{ 'products.bible_band.tier_four_price' | t }}</b>
-            </label>
-            <p class="band-tiers__note">{{ 'products.bible_band.quantity_note' | t }}</p>
-          </fieldset>
+            <p class="product-gift-ready__status" data-gift-ready-status role="alert" aria-live="polite"></p>
+          </aside>
         {% endif %}
         {% if is_bible_band %}
           <input id="Quantity-{{ section.id }}" type="hidden" name="quantity" value="1" data-band-quantity>
         {% else %}
           <div><label class="field-label" for="Quantity-{{ section.id }}">Quantity</label><input id="Quantity-{{ section.id }}" type="number" name="quantity" min="1" value="1"></div>
         {% endif %}
-        <button class="button" type="submit" data-primary-product-submit data-product-title="{{ product.title | escape }}"{% unless product.selected_or_first_available_variant.available %} disabled{% endunless %}>{% if selected_is_preorder %}Preorder now{% elsif product.selected_or_first_available_variant.available %}Add to cart{% else %}Sold out{% endif %}</button>
+        {% if use_band_options %}<p class="band-order-summary" data-band-order-summary aria-live="polite"></p>{% endif %}
+        <button class="button" type="submit" data-primary-product-submit data-product-title="{{ product.title | escape }}"{% unless current.available %} disabled{% endunless %}>{% if current.available %}Add to cart{% else %}Sold out{% endif %}</button>
+        {% if is_bible_band %}{% render 'buy-box-notes', section: section %}{% endif %}
+        {{ form | payment_button }}
+        {% render 'payment-options' %}
+        {%- if is_bible_band and section.settings.mark_testimonial_quote != blank -%}
+          {%- comment -%} Compact version of the Mark Hatley story, right under the payment buttons. The full story is further down the page. {%- endcomment -%}
+          {%- assign mark_short = section.settings.mark_testimonial_quote | split: '…' | first | strip | truncate: 170 -%}
+          <aside class="mark-card" aria-label="{{ 'products.bible_band.customer_story' | t }}">
+            <div class="mark-card__photo">
+              {%- if section.settings.mark_testimonial_image != blank -%}
+                {{ section.settings.mark_testimonial_image | image_url: width: 160 | image_tag: widths: '80,160', sizes: '64px', loading: 'lazy', alt: section.settings.mark_testimonial_name }}
+              {%- else -%}
+                <img src="https://cdn.shopify.com/s/files/1/0966/1972/4984/files/mark-hatley-bible-band-testimonial.jpg?v=1785633674&width=160" width="64" height="64" loading="lazy" alt="{{ section.settings.mark_testimonial_name | escape }}">
+              {%- endif -%}
+            </div>
+            <div class="mark-card__body">
+              <span class="mark-card__stars" aria-label="5 out of 5 stars">★★★★★</span>
+              <blockquote>“{{ mark_short }}”</blockquote>
+              <p class="mark-card__by"><strong>{{ section.settings.mark_testimonial_name }}</strong>{% if section.settings.mark_testimonial_location != blank %}, {{ section.settings.mark_testimonial_location }}{% endif %} · <a href="#MarkTestimonial-{{ section.id }}">Read the full story ↓</a></p>
+            </div>
+          </aside>
+        {%- endif -%}
         {% if is_bible_band %}
           <ul class="purchase-reassurance" aria-label="Purchase reassurance">
             <li><strong>Free shipping</strong><span>on Bible Band orders</span></li>
             <li><strong>No app</strong><span>tap and open</span></li>
             <li><strong>No subscription</strong><span>ever</span></li>
             <li><strong>Compatible</strong><span>iPhone &amp; Android</span></li>
-            <li><strong data-delivery-label>{% if selected_is_preorder %}Preorder timing{% else %}Shipping{% endif %}</strong><span data-delivery-message>{{ selected_inventory_message }}</span></li>
+            <li><strong>Delivery</strong><span data-delivery-reassurance>{{ 'products.bible_band.delivery_estimate' | t }}</span></li>
             <li><strong>Easy returns</strong><span>{% if shop.refund_policy != blank %}<a href="{{ shop.refund_policy.url }}">View return policy</a>{% else %}Contact us for help{% endif %}</span></li>
           </ul>
-          <p class="login-disclaimer"><strong>Optional login:</strong> No login is required to open the daily content. Sign in only if you want to track streaks and Bible reading plan progress.</p>
           <p class="product-impact"><span aria-hidden="true">✦</span><strong>Your Bible Band™ gives back.</strong> A portion of all profits supports local church ministry and missions.</p>
         {% endif %}
-        {{ form | payment_button }}
-        {% render 'payment-options' %}
       {% endform %}
-      {% if is_bible_band %}
-        <div class="back-in-stock" data-sold-out-signup{% if selected_variant.available %} hidden{% endif %}>
-          <strong>Get a restock alert</strong>
-          <p>We’ll email you when this Bible Band option is available again.</p>
-          {% form 'customer', id: restock_form_id, class: 'back-in-stock__form' %}
-            <input type="hidden" name="contact[tags]" value="back-in-stock,bible-band">
-            <input type="hidden" name="contact[note]" value="{{ selected_variant.title | escape }}" data-restock-variant>
-            <label class="visually-hidden" for="BackInStockEmail-{{ section.id }}">Email address</label>
-            <input id="BackInStockEmail-{{ section.id }}" type="email" name="contact[email]" placeholder="Email address" required>
-            <button class="button" type="submit">Notify me</button>
-            {% if form.posted_successfully? %}<p class="form-success">You’re on the restock list.</p>{% endif %}
-            {{ form.errors | default_errors }}
-          {% endform %}
-        </div>
+      {% if is_bible_band and section.settings.show_gift_block %}
+        <aside class="gift-callout">
+          <span class="gift-callout__tag">{{ section.settings.gift_heading }}</span>
+          <p>{{ section.settings.gift_copy }}</p>
+        </aside>
       {% endif %}
       {% if section.settings.enable_social_share and is_bible_band == false %}{% render 'product-share', product: product, share_url: canonical_url %}{% endif %}
     </div>
@@ -215,11 +250,11 @@
 
 <div class="mobile-purchase-bar" data-mobile-purchase-bar>
   <div>
-    <strong>{% if is_bible_band %}The Bible Band™{% else %}{{ product.title }}{% endif %}</strong>
-    <span data-sticky-price>{{ product.selected_or_first_available_variant.price | money }}</span>
+    <strong data-sticky-selection>{% if is_bible_band %}The Bible Band™{% else %}{{ product.title }}{% endif %}</strong>
+    <span data-sticky-price>{{ current.price | money }}</span>
   </div>
-  <button class="button button--gold" type="button" data-sticky-add aria-controls="{{ product_form_id }}"{% unless product.selected_or_first_available_variant.available %} disabled{% endunless %}>
-    {% if selected_is_preorder %}Preorder now{% elsif product.selected_or_first_available_variant.available %}{% if is_bible_band %}Get Your Bible Band{% else %}Add to Cart{% endif %}{% else %}Sold out{% endif %}
+  <button class="button button--gold" type="button" data-sticky-add{% if is_bible_band %} data-action="choose"{% endif %} aria-controls="{{ product_form_id }}"{% unless current.available %} disabled{% endunless %}>
+    {% if current.available %}{% if is_bible_band %}{{ 'products.bible_band.choose_my_band' | t }}{% else %}Add to Cart{% endif %}{% else %}Sold out{% endif %}
   </button>
 </div>
 
@@ -233,9 +268,6 @@
         <div class="step"><div class="step__number">2</div><h3>{{ 'products.bible_band.tap_title' | t }}</h3><p>{{ 'products.bible_band.tap_copy' | t }}</p></div>
         <div class="step"><div class="step__number">3</div><h3>{{ 'products.bible_band.read_title' | t }}</h3><p>{{ 'products.bible_band.read_copy' | t }}</p></div>
       </div>
-      <div class="product-guide-cta">
-        <a class="button button--gold" href="{{ pages['how-to-use-your-bible-band'].url | default: '/pages/how-to-use-your-bible-band' }}">{{ 'products.bible_band.guide_link' | t }}</a>
-      </div>
     </div>
   </section>
 
@@ -248,14 +280,20 @@
         <div class="daily-preview__included" aria-label="{{ 'products.bible_band.included_label' | t }}">
           <span>{{ 'products.bible_band.scripture_label' | t }}</span><span>{{ 'products.bible_band.devotion_label' | t }}</span><span>{{ 'products.bible_band.prayer_label' | t }}</span><span>{{ 'products.bible_band.audio_label' | t }}</span><span>{{ 'products.bible_band.plan_label' | t }}</span>
         </div>
-        <a class="button" href="https://thebibleband.com" target="_blank" rel="noopener">{{ 'products.bible_band.preview_button' | t }} ↗</a>
+        <a class="button" href="https://thebibleband.com/today" target="_blank" rel="noopener">{{ 'products.bible_band.preview_button' | t }} ↗</a>
       </div>
       <div class="daily-preview__device">
-        <video controls playsinline preload="metadata" poster="https://cdn.shopify.com/s/files/1/0966/1972/4984/files/bible-band-real-sample-day-poster.jpg?v=1785634132" aria-label="{{ 'products.bible_band.sample_video_label' | t }}">
+        <video controls playsinline preload="none" poster="https://cdn.shopify.com/s/files/1/0966/1972/4984/files/bible-band-real-sample-day-poster.jpg?v=1785634132" aria-label="{{ 'products.bible_band.sample_video_label' | t }}">
           <source src="{{ 'bible-band-sample-day.mp4' | asset_url }}" type="video/mp4">
-          <a href="https://thebibleband.com" target="_blank" rel="noopener">{{ 'products.bible_band.preview_button' | t }}</a>
+          <a href="https://thebibleband.com/today" target="_blank" rel="noopener">{{ 'products.bible_band.preview_button' | t }}</a>
         </video>
       </div>
+    </div>
+  </section>
+
+  <section class="product-guide-band">
+    <div class="page-width">
+      {% render 'band-guide-callout', variant: 'wide' %}
     </div>
   </section>
 {% endif %}
@@ -267,15 +305,40 @@
   "name": "Product information",
   "settings": [
     { "type": "checkbox", "id": "show_bible_band_sections", "label": "Show Bible Band discipleship sections", "default": true },
+    { "type": "header", "content": "Pack builder" },
+    { "type": "text", "id": "mix_note", "label": "Mix and match note", "default": "Mix any sizes and colors — your discount applies automatically." },
+    { "type": "header", "content": "Incoming stock" },
+    { "type": "textarea", "id": "next_batch_message", "label": "Next batch message", "info": "Shown after the automatic stock count in Almost gone. Update for each shipment, or leave blank to hide the batch message." },
+    { "type": "header", "content": "Preorder" },
+    { "type": "text", "id": "preorder_label", "label": "Preorder label", "default": "Preorder" },
+    { "type": "text", "id": "preorder_note", "label": "Short ship estimate", "default": "expected to ship in 3–4 weeks" },
+    { "type": "textarea", "id": "preorder_copy", "label": "Preorder explanation", "default": "This band is on the way. Order now and it is expected to ship in 3–4 weeks. If your pack mixes preorder and in-stock bands, the whole order ships together when all bands are ready. Need it sooner? Choose a size and style marked “Ships now.”" },
+    { "type": "header", "content": "Sizing guidance" },
+    { "type": "text", "id": "fit_kids", "label": "Kids fit range", "default": "Fits most wrists about 5.5–6.5 in" },
+    { "type": "text", "id": "fit_adult", "label": "Adult fit range", "default": "Fits most wrists about 6.5–7.5 in" },
+    { "type": "text", "id": "fit_adult_xl", "label": "Adult XL fit range", "default": "Fits most wrists about 7.5–8.5 in" },
+    { "type": "text", "id": "size_help_link", "label": "Sizing help link text", "default": "Not sure which size? Measure in 10 seconds →" },
+    { "type": "textarea", "id": "size_help_copy", "label": "Sizing help copy", "default": "Most adults should choose Adult. Choose Adult XL if standard watch bands usually feel tight or you regularly need extended-length bands. If you’re between sizes, size up. For the best fit, wrap a strip of paper snugly around your wrist, mark where it overlaps, then lay it flat against a ruler." },
+    { "type": "text", "id": "reversible_note", "label": "Reversible note", "default": "Every band is reversible — a solid side and a patterned side, so each color is really two." },
+    { "type": "header", "content": "Delivery estimate" },
+    { "type": "checkbox", "id": "show_delivery_date", "label": "Show estimated delivery dates under Add to Cart", "default": true },
+    { "type": "range", "id": "delivery_processing_min", "label": "Processing days, fastest", "min": 0, "max": 10, "step": 1, "unit": "d", "default": 1 },
+    { "type": "range", "id": "delivery_processing_max", "label": "Processing days, slowest", "min": 0, "max": 10, "step": 1, "unit": "d", "default": 3 },
+    { "type": "range", "id": "delivery_shipping_min", "label": "Shipping days, fastest", "min": 1, "max": 20, "step": 1, "unit": "d", "default": 5 },
+    { "type": "range", "id": "delivery_shipping_max", "label": "Shipping days, slowest", "min": 1, "max": 20, "step": 1, "unit": "d", "default": 10, "info": "All four numbers are business days. Dates skip weekends but not holidays." },
+    { "type": "header", "content": "Compatibility line" },
+    { "type": "text", "id": "compat_line", "label": "One-line compatibility note under Add to Cart", "default": "Works with iPhone XS and newer and most NFC-enabled Android phones. No app needed.", "info": "Leave blank to hide it." },
+    { "type": "header", "content": "Buy box order (test)" },
+    { "type": "select", "id": "buybox_order", "label": "Order of the buying steps", "options": [ { "value": "pack_first", "label": "Pack, size, color (current)" }, { "value": "color_first", "label": "Color, size, then pack (test)" } ], "default": "pack_first", "info": "You can also preview the test order on any product link by adding ?buybox=color-first to the URL." },
+    { "type": "header", "content": "Gift callout" },
+    { "type": "checkbox", "id": "show_gift_block", "label": "Show gift callout", "default": true },
+    { "type": "text", "id": "gift_heading", "label": "Gift callout heading", "default": "Buying this as a gift?" },
+    { "type": "textarea", "id": "gift_copy", "label": "Gift callout copy", "default": "The Bible Band is a favorite for baptisms, graduations, confirmations, and new believers. There is nothing to set up and no app to download — they just tap and go. You can add a free gift note in your cart." },
     { "type": "header", "content": "Proof and tap demonstration" },
     { "type": "text", "id": "problem_heading", "label": "Problem and solution heading", "default": "Keep forgetting your time with God?" },
     { "type": "textarea", "id": "problem_copy", "label": "Problem and solution copy", "default": "Quiet time is easy to plan—and easy to forget. The Bible Band keeps a simple reminder on your wrist: notice it, tap it, and today’s Scripture, devotion, and prayer are ready." },
-    { "type": "header", "content": "Inventory and preorder messaging" },
-    { "type": "range", "id": "low_stock_threshold", "label": "Low-stock threshold", "min": 1, "max": 20, "step": 1, "default": 5 },
-    { "type": "text", "id": "in_stock_message", "label": "In-stock message", "default": "In stock — ships in 1–2 business days." },
-    { "type": "text", "id": "preorder_message", "label": "Preorder message", "default": "Preorder — expected to ship in 3–4 weeks." },
     { "type": "checkbox", "id": "show_demo_video", "label": "Show tap demonstration", "default": true },
-    { "type": "video", "id": "demo_video", "label": "3–5 second tap demonstration", "info": "Upload a short, muted clip showing a phone tapping the band and opening the daily experience." },
+    { "type": "video", "id": "demo_video", "label": "3–5 second tap demonstration" },
     { "type": "header", "content": "Featured Bible Band reviews" },
     { "type": "textarea", "id": "review_quote_1", "label": "Review 1", "default": "Love this product and the camo design! It’s such an easy way to stay consistent with Scripture reading and devotion." },
     { "type": "text", "id": "review_author_1", "label": "Review 1 name", "default": "Bible Band customer" },
@@ -288,7 +351,7 @@
     { "type": "image_picker", "id": "review_image_3", "label": "Review 3 customer photo" },
     { "type": "header", "content": "Mark Hatley testimonial" },
     { "type": "image_picker", "id": "mark_testimonial_image", "label": "Mark's photo" },
-    { "type": "textarea", "id": "mark_testimonial_quote", "label": "Featured excerpt", "default": "What can I say about the Bible Band except that, in my opinion, it's about as close to perfect as you can get. … With one tap using your smartphone, you're taken directly to Scripture, a daily devotional, and prayer. It only takes a few minutes each day, but the time you invest can have a lasting impact. … It has genuinely enriched my daily Bible reading, prayer time, and personal walk with the Lord." },
+    { "type": "textarea", "id": "mark_testimonial_quote", "label": "Featured excerpt", "default": "What can I say about the Bible Band except that, in my opinion, it's about as close to perfect as you can get." },
     { "type": "text", "id": "mark_testimonial_name", "label": "Name", "default": "Mark Hatley" },
     { "type": "text", "id": "mark_testimonial_location", "label": "Location", "default": "Bernice, LA" },
     { "type": "header", "content": "Cached daily devotion sample" },
@@ -306,13 +369,41 @@
   .featured-reviews__head{display:flex;align-items:end;justify-content:space-between;gap:30px;margin-bottom:34px}.featured-reviews__head h2{margin:8px 0 0;font-size:clamp(40px,6vw,78px);letter-spacing:-.05em;line-height:.92;text-transform:uppercase}.featured-reviews--column .featured-reviews__head{display:grid;gap:14px}.featured-reviews--column .featured-reviews__head h2{font-size:clamp(34px,4vw,56px)}
   .featured-reviews__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.featured-review{display:flex;min-width:0;flex-direction:column;background:var(--cream);border:2px solid var(--ink)}.featured-review__image{position:relative;overflow:hidden;aspect-ratio:4/3;background:var(--brown)}.featured-review__image img{width:100%;height:100%;object-fit:cover}.featured-review__image>span{position:absolute;right:8px;bottom:8px;padding:6px 8px;background:var(--ink);color:var(--cream);font-size:8px;font-weight:900;letter-spacing:1px;text-transform:uppercase}.featured-review__copy{display:flex;flex:1;flex-direction:column;padding:22px}.featured-review__copy>span{color:var(--rust);font-size:13px;letter-spacing:2px}.featured-review blockquote{margin:12px 0 20px;font-size:16px;font-weight:750;line-height:1.55}.featured-review cite{margin-top:auto;font-size:10px;font-style:normal;font-weight:900;letter-spacing:1px;text-transform:uppercase}.featured-reviews__link{display:inline-block;margin-top:24px;font-size:11px;font-weight:950;letter-spacing:1px;text-transform:uppercase;text-underline-offset:5px}
   .band-at-a-glance{padding-top:22px}.band-at-a-glance__items{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.band-at-a-glance__items span{padding:9px 11px;border:1px solid var(--ink);font-size:9px;font-weight:950;letter-spacing:1px;text-transform:uppercase}
+  .gift-callout{margin:26px 0 0;padding:16px 18px;border:2px solid var(--ink);background:var(--tan)}.gift-callout__tag{display:block;margin-bottom:6px;font-size:10px;font-weight:950;letter-spacing:1.4px;text-transform:uppercase}.gift-callout p{margin:0;font-size:15px;line-height:1.55}
+  .band-options{display:grid;gap:24px;margin-bottom:8px}.band-option{margin:0;padding:0;border:0}.product-page .product-media-column{padding-top:18px}.product-page--bible-band .product-gallery__item:first-child video{display:block;width:100%!important;height:auto!important;max-height:none!important;aspect-ratio:1/1!important;object-fit:contain!important;object-position:center top!important;background:var(--tan)}.band-option>.field-label{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;width:100%;box-sizing:border-box;margin:0 0 14px;padding:12px 14px;border:2px solid var(--ink);border-radius:4px;background:var(--ink);color:var(--cream);font-size:17px;line-height:1.2;font-weight:950;letter-spacing:.4px;box-shadow:4px 4px 0 rgba(0,0,0,.12)}.band-option__selected{font-size:12px;font-weight:750;letter-spacing:0;text-transform:none;opacity:.75}
+  .band-sizes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .band-size{display:flex;flex-direction:column;gap:4px;padding:12px 10px;border:2px solid var(--ink);background:var(--cream);color:var(--ink);text-align:left;cursor:pointer;transition:background .15s ease,color .15s ease}
+  .band-size strong{font-size:14px;font-weight:900;letter-spacing:.3px}.band-size small{font-size:10px;line-height:1.35;opacity:.75}
+  .band-size[aria-pressed="true"]{background:var(--ink);color:var(--cream);box-shadow:4px 4px 0 var(--gold)}.band-size[aria-pressed="true"] small{opacity:.9}
+  .band-size-help__toggle{margin-top:10px;padding:0;border:0;background:none;color:var(--ink);font-size:11px;font-weight:900;letter-spacing:.6px;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+  .band-size-help{margin-top:12px;padding:14px 16px;border:1px dashed var(--ink);background:var(--cream)}.band-size-help p{margin:0 0 10px;font-size:13px;line-height:1.55}.band-size-help ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}.band-size-help li{display:grid;gap:2px;font-size:12px}.band-size-help li strong{font-size:11px;font-weight:950;letter-spacing:1px;text-transform:uppercase}.band-size-help li em{font-style:normal;font-size:11px;opacity:.65}
+  .band-swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .band-swatch{display:flex;flex-direction:column;gap:6px;padding:6px;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;transition:box-shadow .15s ease,transform .15s ease}
+  .band-swatch__media{display:block;overflow:hidden;aspect-ratio:1/1;background:var(--tan)}.band-swatch__media img{width:100%;height:100%;object-fit:cover;display:block}
+  .band-swatch__name{display:block;font-size:9px;font-weight:900;letter-spacing:.2px;line-height:1.3;text-align:center;text-wrap:balance}
+  .band-swatch__name i{display:inline-block;margin:0 2px;font-style:normal;opacity:.45}
+  .band-swatch[aria-pressed="true"]{box-shadow:4px 4px 0 var(--gold);transform:translate(-1px,-1px)}
+  .band-swatch.is-unavailable{opacity:.4}.band-swatch.is-unavailable .band-swatch__media img{filter:grayscale(1)}
+  .band-swatches__note{margin:10px 0 0;font-size:11px;line-height:1.5;opacity:.7}
+  .product-form .purchase-reassurance{margin-top:22px}
+  .quiet-time-solution{margin-top:30px}
+  @media(max-width:480px){.band-sizes{grid-template-columns:1fr}.band-swatches{grid-template-columns:repeat(2,1fr)}.band-swatch__name{font-size:10px}}
   .mark-testimonial{padding:clamp(58px,7vw,96px) 0;background:var(--ink);color:var(--cream);border-block:2px solid var(--ink)}.mark-testimonial__layout{display:grid;grid-template-columns:minmax(300px,.72fr) minmax(0,1.28fr);gap:clamp(34px,7vw,96px);align-items:center}.mark-testimonial__image{overflow:hidden;aspect-ratio:1/1;border:2px solid var(--gold);box-shadow:12px 12px 0 var(--rust)}.mark-testimonial__image img{width:100%;height:100%;object-fit:cover}.mark-testimonial__copy .eyebrow{color:var(--gold)}.mark-testimonial__stars{display:block;color:var(--gold);font-size:16px;letter-spacing:3px}.mark-testimonial blockquote{max-width:850px;margin:18px 0 26px;font-family:var(--font-heading);font-size:clamp(27px,3.2vw,48px);font-weight:850;letter-spacing:-.035em;line-height:1.08}.mark-testimonial__person{display:flex;flex-direction:column;gap:5px;margin:0}.mark-testimonial__person strong{font-size:14px;letter-spacing:1px;text-transform:uppercase}.mark-testimonial__person span{color:var(--tan);font-size:12px}.mark-testimonial__copy>a{display:inline-block;margin-top:24px;color:var(--gold);font-size:10px;font-weight:950;letter-spacing:1px;text-transform:uppercase;text-underline-offset:5px}
-  .product-guide-cta{display:flex;justify-content:center;margin-top:36px}
-  .daily-preview{padding:clamp(64px,8vw,100px) 0;background:var(--cream);color:var(--ink);overflow:hidden}
+  .product-guide-band{padding:0 0 clamp(48px,6vw,80px);background:var(--cream)}
+  .daily-preview{padding:clamp(64px,8vw,100px) 0 clamp(40px,5vw,64px);background:var(--cream);color:var(--ink);overflow:hidden}
   .daily-preview__layout{display:grid;grid-template-columns:minmax(0,.8fr) minmax(380px,1.2fr);gap:clamp(42px,7vw,100px);align-items:center}
   .daily-preview__intro .display-title{max-width:620px;margin-bottom:22px;font-size:clamp(46px,6vw,82px)}.daily-preview__intro>p{max-width:520px;font-size:18px;line-height:1.65}
   .daily-preview__included{display:flex;flex-wrap:wrap;gap:9px;margin-top:28px}.daily-preview__included span{padding:9px 12px;border:1px solid var(--ink);font-size:9px;font-weight:950;letter-spacing:1.2px;text-transform:uppercase}.daily-preview__intro .button{margin-top:26px}
   .daily-preview__device{width:min(100%,680px);justify-self:center}.daily-preview__device video{display:block;width:100%;max-height:760px;aspect-ratio:720/1564;object-fit:cover;border:2px solid var(--ink);background:var(--ink);box-shadow:12px 14px 0 var(--gold)}
   @media(max-width:900px){.featured-reviews__grid{grid-template-columns:1fr 1fr}.featured-review:last-child{grid-column:1/-1}.mark-testimonial__layout,.daily-preview__layout{grid-template-columns:1fr}.mark-testimonial__image{width:min(100%,560px)}.daily-preview__device{justify-self:start;margin-right:14px}}
   @media(max-width:640px){.featured-reviews{padding-block:54px}.featured-reviews--column{margin-top:0;padding:28px 18px}.featured-reviews__head{display:grid;margin-bottom:24px}.featured-reviews__grid{display:flex;margin-right:-18px;overflow-x:auto;scroll-snap-type:x mandatory;padding-right:18px}.featured-review{min-width:78vw;scroll-snap-align:start}.featured-review:last-child{grid-column:auto}.featured-review__copy{padding:18px}.featured-review blockquote{font-size:14px}.mark-testimonial{padding-block:48px}.mark-testimonial__layout{gap:32px}.mark-testimonial__image{width:calc(100% - 8px);box-shadow:8px 8px 0 var(--rust)}.mark-testimonial blockquote{font-size:27px;line-height:1.12}.daily-preview__intro .display-title{font-size:46px}.daily-preview__device video{max-height:72svh;box-shadow:8px 9px 0 var(--gold)}}
+.product-quick-proof{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 18px}.product-quick-proof span{padding:7px 9px;border:1px solid var(--ink);font-size:9px;font-weight:950;letter-spacing:.9px;text-transform:uppercase}
+.product-quick-review{margin:18px 0 0;padding:15px 17px;border-left:4px solid var(--gold);background:var(--tan);font-size:13px;font-weight:750;line-height:1.55}.product-quick-review>span{color:var(--rust);letter-spacing:2px}.product-quick-review cite{display:block;margin-top:5px;font-size:9px;font-style:normal;font-weight:900;letter-spacing:.8px;text-transform:uppercase}
+.mark-card{display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;align-items:start;margin:0;padding:14px 16px;border:2px solid var(--ink);background:var(--tan)}
+.mark-card__photo{width:64px;height:64px;overflow:hidden;border:2px solid var(--ink);background:var(--brown)}.mark-card__photo img{display:block;width:100%;height:100%;object-fit:cover}
+.mark-card__stars{display:block;color:var(--rust);font-size:13px;letter-spacing:2px}
+.mark-card blockquote{margin:4px 0 8px;padding:0;border:0;font-size:14px;font-weight:750;line-height:1.5}
+.mark-card__by{margin:0;color:var(--brown);font-size:11px;line-height:1.5}.mark-card__by strong{color:var(--ink)}.mark-card__by a{color:var(--ink);font-weight:900;text-underline-offset:3px}
+@media(max-width:1000px),(pointer:coarse){.mark-card__by a{position:relative}.mark-card__by a::after{content:'';position:absolute;inset:-16px -8px}}
+@media(max-width:1000px){.product-page .product-layout{display:flex!important;flex-direction:column!important;gap:28px}.product-page .product-media-column{display:contents!important}.product-page .product-gallery-wrap{order:1!important}.product-page .product-info{order:2!important}.product-page .product-details{order:3!important}.product-page .featured-reviews--column{order:4!important}.product-info .eyebrow{margin-bottom:6px}.product-info h1{margin-top:0}.product-form{margin-top:20px}}
 {% endstylesheet %}

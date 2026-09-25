@@ -1,22 +1,84 @@
-<aside class="site-impact" aria-labelledby="SiteImpactTitle-{{ section.id }}">
+{%- liquid
+  comment
+    Build a live low-stock message for the ticker from real inventory.
+    Two passes: each pass picks the lowest-count variant not already used.
+  endcomment
+  assign low_msg = ''
+  assign used_ids = ''
+  if section.settings.show_low_stock
+    assign band_handle = section.settings.low_stock_handle | default: 'the-bible-band'
+    assign band = all_products[band_handle]
+    assign threshold = section.settings.low_stock_threshold
+    for step in (1..2)
+      assign best = blank
+      assign best_qty = 99999
+      for v in band.variants
+        if v.inventory_management != 'shopify'
+          continue
+        endif
+        if v.inventory_quantity <= 0 or v.inventory_quantity > threshold
+          continue
+        endif
+        assign key = '|' | append: v.id | append: '|'
+        if used_ids contains key
+          continue
+        endif
+        if v.inventory_quantity < best_qty
+          assign best = v
+          assign best_qty = v.inventory_quantity
+        endif
+      endfor
+      if best != blank
+        assign used_ids = used_ids | append: '|' | append: best.id | append: '|'
+        assign sz = best.option1 | split: '—' | first | strip
+        assign cl = best.option2 | split: ' / ' | first
+        assign entry = sz | append: ' ' | append: cl | append: ' — only ' | append: best_qty | append: ' left'
+        if low_msg == ''
+          assign low_msg = entry
+        else
+          assign low_msg = low_msg | append: ' · ' | append: entry
+        endif
+      endif
+    endfor
+    if low_msg != ''
+      assign low_msg = section.settings.low_stock_prefix | append: ' ' | append: low_msg
+    endif
+  endif
+-%}
+<aside class="site-impact site-impact--compact" aria-label="Ministry impact">
   <div class="page-width site-impact__inner">
-    <span class="site-impact__mark" aria-hidden="true">✦</span>
-    <div>
-      <p class="site-impact__eyebrow">{{ section.settings.impact_kicker }}</p>
-      <h2 id="SiteImpactTitle-{{ section.id }}">{{ section.settings.impact_heading }}</h2>
-    </div>
-    <p>{{ section.settings.impact_copy }}</p>
+    <p><strong>Free <span class="impact-optional">Bible Band </span>shipping</strong><span aria-hidden="true"> · </span><span class="impact-long">10% of profits supports ministry</span><span class="impact-short">10% supports ministry</span></p>
   </div>
 </aside>
 {% if section.settings.show %}
   <div class="ticker" aria-label="Announcement">
     <div class="ticker__track">
       {% for i in (1..2) %}
-        <strong>{% if section.settings.announcement_link != blank %}<a href="{{ section.settings.announcement_link }}">{{ section.settings.text_1 }}</a>{% else %}{{ section.settings.text_1 }}{% endif %}</strong><b aria-hidden="true">✦</b><span>{{ section.settings.text_2 }}</span><b aria-hidden="true">✦</b><span>{{ section.settings.text_3 }}</span><b aria-hidden="true">✦</b><span>{{ section.settings.text_4 }}</span><b aria-hidden="true">✦</b>
+        <strong>{{ section.settings.text_1 }}</strong><b aria-hidden="true">✦</b>{% if low_msg != blank %}<strong class="ticker__low">{{ low_msg }}</strong><b aria-hidden="true">✦</b>{% endif %}<span>{{ section.settings.text_2 }}</span><b aria-hidden="true">✦</b><span>{{ section.settings.text_3 }}</span><b aria-hidden="true">✦</b><span>{{ section.settings.text_4 }}</span><b aria-hidden="true">✦</b>
       {% endfor %}
     </div>
   </div>
 {% endif %}
+
+{% stylesheet %}
+  .site-impact--compact .site-impact__inner{display:flex;min-height:38px;align-items:center;justify-content:center;padding-block:8px;text-align:center}
+  .site-impact--compact p{margin:0;font-size:11px;font-weight:800;letter-spacing:.4px;line-height:1.35}
+  .site-impact--compact strong{font-weight:950;text-transform:uppercase}
+  .impact-short{display:none}
+  @media(max-width:480px){.site-impact--compact p{white-space:nowrap;letter-spacing:.2px}.impact-optional{display:none}.site-impact--compact .site-impact__inner{min-height:34px;padding-block:6px}}
+  @media(max-width:359px){.impact-long{display:none}.impact-short{display:inline}}
+  .site-impact__help{display:flex;align-items:center;gap:11px;flex:none;padding:10px 16px;border:2px solid currentColor;text-decoration:none;transition:background .15s ease,color .15s ease}
+  .site-impact__help:hover{background:var(--ink);color:var(--cream)}
+  .site-impact__help-icon{display:grid;place-items:center;flex:none;width:26px;height:26px;border:2px solid currentColor;border-radius:50%;font-size:14px;font-weight:950;line-height:1}
+  .site-impact__help-text{display:grid;gap:1px;line-height:1.2}
+  .site-impact__help-text strong{font-size:11px;font-weight:950;letter-spacing:1.1px;text-transform:uppercase}
+  .site-impact__help-text small{font-size:10px;opacity:.75}
+  .ticker__low{color:var(--gold)}
+  @media(max-width:900px){
+    .site-impact__help{width:100%;justify-content:center;margin-top:4px}
+  }
+{% endstylesheet %}
+
 {% schema %}
-{"name":"Announcement ticker","settings":[{"type":"header","content":"Ministry impact"},{"type":"text","id":"impact_kicker","label":"Kicker","default":"Faith That Gives Back"},{"type":"text","id":"impact_heading","label":"Heading","default":"Your Purchase Supports Ministry"},{"type":"textarea","id":"impact_copy","label":"Message","default":"A portion of all profits goes back into local church ministry and missions, with The Bible Band™ at the heart of that commitment."},{"type":"header","content":"Scrolling announcement"},{"type":"checkbox","id":"show","label":"Show ticker","default":true},{"type":"text","id":"text_1","label":"Highlighted message","default":"Bible Band preorders are open — incoming inventory expected in about 4 weeks. Shop colors & sizes →"},{"type":"url","id":"announcement_link","label":"Highlighted message link"},{"type":"text","id":"text_2","label":"Message two","default":"Free shipping on all Bible Band™ orders"},{"type":"text","id":"text_3","label":"Message three","default":"Keep God's Word Close"},{"type":"text","id":"text_4","label":"Scripture message","default":"“Fix these words of mine in your hearts and minds; tie them as symbols on your hands.” — Deuteronomy 11:18"}]}
+{"name":"Announcement ticker","settings":[{"type":"header","content":"Ministry impact"},{"type":"text","id":"impact_kicker","label":"Kicker","default":"Faith That Gives Back"},{"type":"text","id":"impact_heading","label":"Heading","default":"Your Purchase Supports Ministry"},{"type":"textarea","id":"impact_copy","label":"Message","default":"A portion of all profits goes back into local church ministry and missions, with The Bible Band™ at the heart of that commitment."},{"type":"header","content":"Help link"},{"type":"checkbox","id":"show_help","label":"Show help link","default":true},{"type":"text","id":"help_label","label":"Help label","default":"Need help?"},{"type":"text","id":"help_sub","label":"Help subtext","default":"How to use your Bible Band"},{"type":"url","id":"help_link","label":"Help link"},{"type":"header","content":"Scrolling announcement"},{"type":"checkbox","id":"show","label":"Show ticker","default":true},{"type":"text","id":"text_1","label":"Highlighted message","default":"Free shipping on all Bible Band™ orders"},{"type":"text","id":"text_2","label":"Message two","default":"Keep God's Word Close"},{"type":"text","id":"text_3","label":"Message three","default":"Scripture · Prayer · Devotion"},{"type":"text","id":"text_4","label":"Scripture message","default":"“Fix these words of mine in your hearts and minds; tie them as symbols on your hands.” — Deuteronomy 11:18"},{"type":"header","content":"Live low stock message"},{"type":"paragraph","content":"Adds a running-out message to the ticker from real inventory. Hides itself automatically when nothing is low."},{"type":"checkbox","id":"show_low_stock","label":"Show live low stock message","default":true},{"type":"text","id":"low_stock_handle","label":"Product handle to watch","default":"the-bible-band"},{"type":"range","id":"low_stock_threshold","label":"Low stock threshold","min":1,"max":25,"step":1,"unit":"pcs","default":10},{"type":"text","id":"low_stock_prefix","label":"Low stock prefix","default":"Almost gone —"}]}
 {% endschema %}

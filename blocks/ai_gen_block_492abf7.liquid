@@ -1,0 +1,202 @@
+{% doc %}
+  @prompt
+    Create a Shopify Liquid block named "Bible Band $6 Soap Add-On" for the cart page. Show it only when a cart.items line has item.url containing "/products/the-bible-band"; do not use product.handle. Hide it when the cart already contains any selected soap. Add four product settings soap_1 through soap_4. For each selected available soap, show its Shopify image, title, struck-through $10, "$6 with your Bible Band", and a standard POST form to routes.cart_add_url with variant id, quantity 1, return_to /cart, and button "Add soap for $6". Heading: "Add a soap for $6". Note: "Your Bible Band unlocks one $6 soap. Discount applies automatically." Four columns desktop, two mobile. Liquid, HTML and scoped CSS only. No scripts, external assets, app embeds, cookies, analytics, or network requests. Do not change product prices.
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+{% assign bible_band_in_cart = false %}
+{% for cart_item in cart.items %}
+  {% if cart_item.url contains '/products/the-bible-band' %}
+    {% assign bible_band_in_cart = true %}
+  {% endif %}
+{% endfor %}
+
+{% assign soap_already_in_cart = false %}
+{% for cart_item in cart.items %}
+  {% if block.settings.soap_1 != blank and cart_item.product.id == block.settings.soap_1.id %}
+    {% assign soap_already_in_cart = true %}
+  {% endif %}
+  {% if block.settings.soap_2 != blank and cart_item.product.id == block.settings.soap_2.id %}
+    {% assign soap_already_in_cart = true %}
+  {% endif %}
+  {% if block.settings.soap_3 != blank and cart_item.product.id == block.settings.soap_3.id %}
+    {% assign soap_already_in_cart = true %}
+  {% endif %}
+  {% if block.settings.soap_4 != blank and cart_item.product.id == block.settings.soap_4.id %}
+    {% assign soap_already_in_cart = true %}
+  {% endif %}
+{% endfor %}
+
+{% if bible_band_in_cart and soap_already_in_cart == false %}
+  {% style %}
+    .ai-soap-addon-{{ ai_gen_id }} {
+      display: block;
+      width: {{ block.settings.desktop_width_percent }}%;
+      max-width: 100%;
+      margin: 28px auto;
+      padding: 28px;
+      background: {{ block.settings.background_color }};
+      color: {{ block.settings.text_color }};
+      border: 1px solid {{ block.settings.border_color }};
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+
+    .ai-soap-addon-{{ ai_gen_id }}__heading {
+      margin: 0 0 8px;
+      color: {{ block.settings.heading_color }};
+      font-family: {{ block.settings.heading_font.family }}, serif;
+      font-size: 28px;
+      line-height: 1.15;
+    }
+
+    .ai-soap-addon-{{ ai_gen_id }}__note {
+      margin: 0 0 22px;
+      font-family: {{ block.settings.body_font.family }}, serif;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .ai-soap-addon-{{ ai_gen_id }}__grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .ai-soap-addon-{{ ai_gen_id }}__card {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding: 12px;
+      background: {{ block.settings.card_color }};
+      border-radius: 6px;
+    }
+
+    .ai-soap-addon-{{ ai_gen_id }}__image {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+
+    .ai-soap-addon-{{ ai_gen_id }}__title {
+      margin: 0 0 8px;
+      color: {{ block.settings.heading_color }};
+      font-family: {{ block.settings.body_font.family }}, serif;
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .ai-soap-addon-{{ ai_gen_id }}__price {
+      margin: 0 0 14px;
+      font-family: {{ block.settings.body_font.family }}, serif;
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .ai-soap-addon-{{ ai_gen_id }}__original {
+      color: {{ block.settings.muted_color }};
+      text-decoration: line-through;
+      margin-right: 4px;
+    }
+
+    .ai-soap-addon-{{ ai_gen_id }}__offer {
+      color: {{ block.settings.offer_color }};
+      font-weight: 700;
+    }
+
+    .ai-soap-addon-{{ ai_gen_id }}__button {
+      width: 100%;
+      margin-top: auto;
+      padding: 11px 10px;
+      border: 0;
+      border-radius: 4px;
+      background: {{ block.settings.button_color }};
+      color: {{ block.settings.button_text_color }};
+      font-family: {{ block.settings.body_font.family }}, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.2;
+      cursor: pointer;
+    }
+
+    .ai-soap-addon-{{ ai_gen_id }}__button:hover {
+      background: {{ block.settings.button_hover_color }};
+    }
+
+    .ai-soap-addon-{{ ai_gen_id }}__button:focus-visible {
+      outline: 3px solid {{ block.settings.focus_color }};
+      outline-offset: 2px;
+    }
+
+    @media screen and (max-width: 749px) {
+      .ai-soap-addon-{{ ai_gen_id }} {
+        padding: 22px 16px;
+      }
+
+      .ai-soap-addon-{{ ai_gen_id }}__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  {% endstyle %}
+
+  <div class="ai-soap-addon-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+    <h2 class="ai-soap-addon-{{ ai_gen_id }}__heading">Add a soap for $6</h2>
+    <p class="ai-soap-addon-{{ ai_gen_id }}__note">Your Bible Band unlocks one $6 soap. Discount applies automatically.</p>
+    <div class="ai-soap-addon-{{ ai_gen_id }}__grid">
+      {% for i in (1..4) %}
+        {% liquid
+          assign soap_key = 'soap_' | append: i
+          assign soap = block.settings[soap_key]
+        %}
+        {% if soap != blank and soap.available %}
+          {% assign soap_variant = soap.selected_or_first_available_variant %}
+          <div class="ai-soap-addon-{{ ai_gen_id }}__card">
+            {% if soap.featured_image %}
+              <img class="ai-soap-addon-{{ ai_gen_id }}__image" src="{{ soap.featured_image | image_url: width: 600 }}" alt="{{ soap.featured_image.alt | default: soap.title | escape }}" loading="lazy" width="600" height="600">
+            {% endif %}
+            <h3 class="ai-soap-addon-{{ ai_gen_id }}__title">{{ soap.title | escape }}</h3>
+            <p class="ai-soap-addon-{{ ai_gen_id }}__price"><span class="ai-soap-addon-{{ ai_gen_id }}__original">$10</span><span class="ai-soap-addon-{{ ai_gen_id }}__offer">$6 with your Bible Band</span></p>
+            <form method="post" action="{{ routes.cart_add_url }}">
+              <input type="hidden" name="items[0][id]" value="{{ soap_variant.id }}">
+              <input type="hidden" name="items[0][quantity]" value="1">
+              <input type="hidden" name="return_to" value="/cart">
+              <button class="ai-soap-addon-{{ ai_gen_id }}__button" type="submit">Add soap for $6</button>
+            </form>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Bible Band $6 Soap Add-On",
+  "settings": [
+    { "type": "product", "id": "soap_1", "label": "Soap 1" },
+    { "type": "product", "id": "soap_2", "label": "Soap 2" },
+    { "type": "product", "id": "soap_3", "label": "Soap 3" },
+    { "type": "product", "id": "soap_4", "label": "Soap 4" },
+    { "type": "range", "id": "desktop_width_percent", "label": "Desktop width", "min": 50, "max": 100, "step": 5, "unit": "%", "default": 100 },
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#EAE0D5" },
+    { "type": "color", "id": "card_color", "label": "Cards", "default": "#F7F2EC" },
+    { "type": "color", "id": "border_color", "label": "Border", "default": "#5E503F" },
+    { "type": "color", "id": "heading_color", "label": "Headings", "default": "#0A0908" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#0A0908" },
+    { "type": "color", "id": "muted_color", "label": "Muted text", "default": "#5E503F" },
+    { "type": "color", "id": "offer_color", "label": "Offer text", "default": "#5E503F" },
+    { "type": "color", "id": "button_color", "label": "Button", "default": "#0A0908" },
+    { "type": "color", "id": "button_text_color", "label": "Button text", "default": "#FFFFFF" },
+    { "type": "color", "id": "button_hover_color", "label": "Button hover", "default": "#5E503F" },
+    { "type": "color", "id": "focus_color", "label": "Focus outline", "default": "#C1440E" },
+    { "type": "font_picker", "id": "heading_font", "label": "Heading font", "default": "assistant_n7" },
+    { "type": "font_picker", "id": "body_font", "label": "Body font", "default": "serif" }
+  ],
+  "presets": [{ "name": "Bible Band $6 Soap Add-On" }],
+  "tag": null,
+  "class": "bible-band-soap-addon"
+}
+{% endschema %}

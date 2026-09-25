@@ -1,9 +1,9 @@
 <header class="site-header">
   <div class="page-width site-header__inner">
     <div class="site-brand">
-      {% if settings.mascot != blank %}{{ settings.mascot | image_url: width: 180 | image_tag: class: 'site-brand__mascot', widths: '90,120,180', sizes: '74px', alt: '' }}{% else %}<img class="site-brand__mascot" src="{{ 'clark-whitney.png' | asset_url }}" alt="" width="240" height="240">{% endif %}
+      {% if settings.mascot != blank %}{{ settings.mascot | image_url: width: 180 | image_tag: class: 'site-brand__mascot', widths: '90,120,180', alt: 'Pastor Clark Whitney, founder of Bible House Goods' }}{% else %}<img class="site-brand__mascot" src="{{ 'clark-whitney.png' | asset_url }}" alt="" width="180" height="180">{% endif %}
       <a href="{{ routes.root_url }}" class="site-brand__logo" aria-label="{{ shop.name }} home">
-        {% if settings.logo != blank %}{{ settings.logo | image_url: width: 520 | image_tag: widths: '180,280,420,520', alt: shop.name }}{% else %}<img src="{{ 'bible-house-logo.png' | asset_url }}" alt="{{ shop.name }}" width="600" height="600">{% endif %}
+        {% if settings.logo != blank %}{{ settings.logo | image_url: width: 520 | image_tag: widths: '180,280,420,520', alt: shop.name }}{% else %}<img src="{{ 'bible-house-logo.png' | asset_url }}" alt="{{ shop.name }}" width="520" height="180">{% endif %}
       </a>
     </div>
     <nav class="desktop-nav" aria-label="Primary navigation">
@@ -22,4 +22,4 @@
 </header>
 {% schema %}
 {"name":"Header","settings":[{"type":"link_list","id":"menu","label":"Menu","default":"main-menu"}]}
-{% endschema %}
+{% endschema %} <meta name="facebook-domain-verification" content="snpro2gf609fqbm8lqjnxhrho9gmtn" />

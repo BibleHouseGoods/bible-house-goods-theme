@@ -3,6 +3,9 @@
     <div class="page-width--narrow"><span class="eyebrow">Bible House Goods</span><h1 class="display-title">{{ page.title }}</h1></div>
   </header>
   <div class="content-section page-width--narrow">
+    {% if page.handle == 'bible-band-faq' %}
+      {% render 'band-guide-callout', variant: 'compact', heading: 'Just got your band? Start here.', copy: 'Our step-by-step guide walks you through the very first tap on iPhone and Android — about 30 seconds, start to finish.' %}
+    {% endif %}
     {% if page.handle == 'how-it-works' %}
       {% assign content_parts = page.content | split: '<hr>' %}
       <div class="rte">{{ content_parts.first }}</div>
@@ -19,6 +22,9 @@
       {% endif %}
     {% else %}
       <div class="rte">{{ page.content }}</div>
+    {% endif %}
+    {% if page.handle == 'bible-band-faq' %}
+      {% render 'band-guide-callout', variant: 'compact', heading: 'Still stuck on the first tap?', copy: 'The full how-to guide covers iPhone and Android step by step, plus what to do if nothing happens when you tap.' %}
     {% endif %}
   </div>
 </article>

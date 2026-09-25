@@ -1,0 +1,273 @@
+{%- comment -%} Bible Band pack builder + preorder. Expects product, section, current, size_option, color_option {%- endcomment -%}
+{%- comment -%} LOW STOCK THRESHOLD — badge appears when a variant has this many units or fewer. Change this one number to adjust. {%- endcomment -%}
+{%- assign low_threshold = 10 -%}
+{%- liquid
+  assign color_first = false
+  if section.settings.buybox_order == 'color_first'
+    assign color_first = true
+  endif
+  assign d_pmin = section.settings.delivery_processing_min | default: 1
+  assign d_pmax = section.settings.delivery_processing_max | default: 3
+  assign d_smin = section.settings.delivery_shipping_min | default: 5
+  assign d_smax = section.settings.delivery_shipping_max | default: 10
+  assign d_min = d_pmin | plus: d_smin
+  assign d_max = d_pmax | plus: d_smax
+-%}
+<div class="band-options" tabindex="-1" data-choose-label="{{ 'products.bible_band.choose_my_band' | t }}" data-add-label="{{ 'products.product.add_to_cart' | t }}" data-selected-label="{{ 'products.bible_band.selected_band' | t }}" data-delivery-estimate="{{ 'products.bible_band.delivery_estimate' | t }}" data-add-error="{{ 'products.bible_band.add_error' | t }}" data-band-options data-next-batch-message="{{ section.settings.next_batch_message | escape }}" data-preorder-note="{{ section.settings.preorder_note | escape }}" data-buybox-order="{% if color_first %}color_first{% else %}pack_first{% endif %}" data-delivery-min="{{ d_min }}" data-delivery-max="{{ d_max }}" data-show-delivery-date="{{ section.settings.show_delivery_date }}">
+  <fieldset class="band-option" data-step="pack">
+    <legend class="field-label" data-pack-step>{% if color_first %}3{% else %}1{% endif %}. Choose your pack</legend>
+    <div class="pack-grid">
+      {% for n in (1..10) %}
+        {% liquid
+          case n
+            when 1
+              assign t_name = 'products.bible_band.tier_one' | t
+              assign t_price = 'products.bible_band.tier_one_price' | t
+              assign t_note = 'products.bible_band.tier_one_note' | t
+            when 2
+              assign t_name = 'products.bible_band.tier_two' | t
+              assign t_price = 'products.bible_band.tier_two_price' | t
+              assign t_note = 'products.bible_band.tier_two_note' | t
+            when 3
+              assign t_name = 'products.bible_band.tier_three' | t
+              assign t_price = 'products.bible_band.tier_three_price' | t
+              assign t_note = 'products.bible_band.tier_three_note' | t
+            when 4
+              assign t_name = 'products.bible_band.tier_four' | t
+              assign t_price = 'products.bible_band.tier_four_price' | t
+              assign t_note = 'products.bible_band.tier_four_note' | t
+            when 5
+              assign t_name = '5 bands'
+              assign t_price = '$79.99'
+              assign t_note = 'Save $19.96'
+            when 6
+              assign t_name = '6 bands'
+              assign t_price = '$94.99'
+              assign t_note = 'Save $24.95'
+            when 7
+              assign t_name = '7 bands'
+              assign t_price = '$109.99'
+              assign t_note = 'Save $29.94'
+            when 8
+              assign t_name = '8 bands'
+              assign t_price = '$124.99'
+              assign t_note = 'Save $34.93'
+            when 9
+              assign t_name = '9 bands'
+              assign t_price = '$139.99'
+              assign t_note = 'Save $39.92'
+            when 10
+              assign t_name = 'products.bible_band.tier_ten' | t
+              assign t_price = 'products.bible_band.tier_ten_price' | t
+              assign t_note = 'products.bible_band.tier_ten_note' | t
+          endcase
+          assign total_num = t_price | remove: '$' | remove: ',' | plus: 0.0
+          assign per_cents = 0
+          if total_num > 0
+            assign per_cents = total_num | divided_by: n | times: 100 | round
+          endif
+        %}
+        <button class="pack-choice" type="button" data-pack-choice="{{ n }}" aria-pressed="{% if n == 1 %}true{% else %}false{% endif %}"{% if n > 4 %} data-pack-extra hidden{% endif %}>
+          <span class="pack-choice__name">{{ t_name }}</span>
+          <span class="pack-choice__price">{{ t_price }}</span>
+          {% if n > 1 and per_cents > 0 %}<span class="pack-choice__each">{{ per_cents | money }} each</span>{% endif %}
+          {% if t_note != blank %}<span class="pack-choice__note">{{ t_note }}</span>{% endif %}
+        </button>
+      {% endfor %}
+    </div>
+    <button class="band-size-help__toggle pack-more-toggle" type="button" data-pack-more-toggle aria-expanded="false">{{ 'products.bible_band.more_packs' | t }}</button>
+    <p class="pack-bulk-note">{{ 'products.bible_band.group_prompt' | t }} <a href="/pages/bible-band-church-packs">{{ 'products.bible_band.group_link' | t }}</a></p>
+    <p class="pack-mix-note" data-mix-note hidden>{{ section.settings.mix_note | default: 'Mix any sizes and colors — your discount applies automatically.' }}</p>
+  </fieldset>
+
+  <div class="pack-tray" data-pack-tray hidden>
+    <div class="pack-tray__head"><span class="field-label">Your pack</span><span class="pack-tray__count" data-pack-count></span></div>
+    <ol class="pack-tray__list" data-pack-list></ol>
+  </div>
+
+  <fieldset class="band-option" data-step="size">
+    <legend class="field-label" data-size-step>2. Choose your size</legend>
+    <div class="band-sizes">
+      {% for value in size_option.values %}
+        {% liquid
+          assign short_label = value | split: '—' | first | strip
+          assign size_measurement = value | split: '—' | last | strip
+        %}
+        <button class="band-size" type="button" data-band-size="{{ value | escape }}" aria-pressed="{% if current.option1 == value %}true{% else %}false{% endif %}">
+          <strong>{{ short_label }}</strong><small>{{ size_measurement }}</small>
+        </button>
+      {% endfor %}
+    </div>
+    <button class="band-size-help__toggle" type="button" data-size-help-toggle aria-expanded="false" aria-controls="SizeHelp-{{ section.id }}">{{ section.settings.size_help_link }}</button>
+    <div class="band-size-help" id="SizeHelp-{{ section.id }}" data-size-help hidden>
+      <p>Measure snugly around your wrist, then choose the closest band length. If you’re between sizes, size up.</p>
+      <ul>
+        <li><strong>Youth / Small</strong><em>160mm (6.3")</em></li>
+        <li><strong>Medium</strong><em>180mm (7.1")</em></li>
+        <li><strong>Large</strong><em>195mm (7.7")</em></li>
+        <li><strong>XL</strong><em>205mm (8.1")</em></li>
+      </ul>
+    </div>
+  </fieldset>
+
+  <fieldset class="band-option" data-step="color">
+    <legend class="field-label"><span data-color-step>{% if color_first %}1{% else %}3{% endif %}. Choose your color</span> <span class="band-option__selected" data-band-selection>{{ current.option2 }}</span></legend>
+    <div class="band-swatches">
+      {% for value in color_option.values %}
+        {% liquid
+          assign sv = blank
+          for v in product.variants
+            if v.option2 == value and v.option1 == current.option1
+              assign sv = v
+              break
+            endif
+          endfor
+          if sv == blank
+            for v in product.variants
+              if v.option2 == value
+                assign sv = v
+                break
+              endif
+            endfor
+          endif
+          assign gallery_media_id = blank
+          for v in product.variants
+            if v.option2 == value and v.option1 contains 'Medium'
+              assign gallery_media_id = v.featured_media.id
+              break
+            endif
+          endfor
+          assign parts = value | split: ' / '
+          assign alt_image = blank
+          if value contains 'Field Khaki'
+            for img in product.images
+              if img.src contains 'Camo.jpg'
+                assign alt_image = img
+                break
+              endif
+            endfor
+          elsif value contains 'Mauve'
+            for img in product.images
+              if img.src contains 'Cheetah_1'
+                assign alt_image = img
+                break
+              endif
+            endfor
+          elsif value contains 'Cobalt'
+            for img in product.images
+              if img.src contains 'Grey_Aztec_Main'
+                assign alt_image = img
+                break
+              endif
+            endfor
+          elsif value contains 'Space Grey'
+            for img in product.images
+              if img.src contains 'Sport_Grey_Main'
+                assign alt_image = img
+                break
+              endif
+            endfor
+          elsif value contains 'Pink Bubblegum'
+            for img in product.images
+              if img.src contains 'Pink_Check_1'
+                assign alt_image = img
+                break
+              endif
+            endfor
+          elsif value contains 'Maroon'
+            for img in product.images
+              if img.src contains 'Maroon_2'
+                assign alt_image = img
+                break
+              endif
+            endfor
+          endif
+          assign alt_text = value | append: ' — reverse side'
+          assign first_image = sv.image
+          assign second_image = alt_image
+          if value contains 'Field Khaki' or value contains 'Mauve'
+            assign first_image = alt_image
+            assign second_image = sv.image
+          endif
+        %}
+        <button class="band-swatch" type="button" data-band-color="{{ value | escape }}"{% if gallery_media_id != blank %} data-gallery-media="{{ gallery_media_id }}"{% endif %} title="{{ value | escape }}" aria-pressed="{% if current.option2 == value %}true{% else %}false{% endif %}">
+          <span class="band-swatch__media">{% if first_image != blank %}{{ first_image | image_url: width: 220 | image_tag: widths: '110,220', loading: 'lazy', alt: value, class: 'band-swatch__img band-swatch__img--front' }}{% endif %}{% if second_image != blank %}{{ second_image | image_url: width: 220 | image_tag: widths: '110,220', loading: 'lazy', alt: alt_text, class: 'band-swatch__img band-swatch__img--back' }}{% endif %}<span class="band-swatch__flag" data-flag hidden></span></span>
+          <span class="band-swatch__name">{% for p in parts %}<span>{{ p }}</span>{% unless forloop.last %}<i aria-hidden="true">/</i>{% endunless %}{% endfor %}</span>
+        </button>
+      {% endfor %}
+    </div>
+    <p class="band-swatches__note">{{ section.settings.reversible_note }}</p>
+  </fieldset>
+
+  <p class="lowstock-callout" data-lowstock-callout hidden><strong>Almost gone</strong> <span data-lowstock-text></span></p>
+
+  <p class="preorder-callout" data-preorder-callout hidden><strong>{{ section.settings.preorder_label | escape }} — {{ section.settings.preorder_note | escape }}</strong> <span>{{ section.settings.preorder_copy }}</span></p>
+  <input type="hidden" name="properties[Ships]" value="PREORDER · {{ section.settings.preorder_note | escape }}" data-preorder-property disabled>
+
+  <script type="application/json" data-band-variant-map>[{% for v in product.variants %}{% liquid
+    assign is_pre = false
+    if v.available and v.inventory_management == 'shopify' and v.inventory_policy == 'continue' and v.inventory_quantity <= 0
+      assign is_pre = true
+    endif
+    assign is_low = false
+    if v.inventory_management == 'shopify' and v.inventory_quantity > 0 and v.inventory_quantity <= low_threshold
+      assign is_low = true
+    endif
+    assign qty_now = v.inventory_quantity | at_least: 0
+    assign sizeshort = v.option1 | split: '—' | first | strip
+    assign colorshort = v.option2 | split: ' / ' | first
+  %}{"id":{{ v.id | json }},"size":{{ v.option1 | json }},"color":{{ v.option2 | json }},"sizeShort":{{ sizeshort | json }},"colorShort":{{ colorshort | json }},"available":{{ v.available | json }},"preorder":{{ is_pre | json }},"low":{{ is_low | json }},"qty":{{ qty_now | json }},"img":{{ v.image | image_url: width: 120 | json }}}{% unless forloop.last %},{% endunless %}{% endfor %}]</script>
+</div>
+
+<style>
+  .pack-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .pack-choice[hidden],.pack-more-toggle[hidden]{display:none}.pack-choice{position:relative;display:flex;flex-direction:column;gap:2px;padding:11px 8px;border:2px solid var(--ink);background:var(--cream);color:var(--ink);text-align:left;cursor:pointer}
+  .pack-choice__name{font-size:12px;font-weight:900;letter-spacing:.2px}
+  .pack-choice__price{font-size:14px;font-weight:800}
+  .pack-choice__each{font-size:10px;font-weight:750;opacity:.75}
+  .pack-choice__note{margin-top:2px;font-size:9px;line-height:1.3;opacity:.7}
+  .pack-choice[aria-pressed="true"]{background:var(--ink);color:var(--cream);box-shadow:4px 4px 0 var(--gold)}
+  .pack-choice[aria-pressed="true"] .pack-choice__note,.pack-choice[aria-pressed="true"] .pack-choice__each{opacity:.9}
+  .pack-pairing{margin:12px 0 0;padding:9px 12px;border-left:3px solid var(--gold);background:var(--cream);font-size:12.5px;line-height:1.5}
+  .pack-mix-note{margin:10px 0 0;font-size:12px;line-height:1.5;opacity:.8}
+  .pack-tray{margin:-6px 0 0;padding:14px 16px;border:2px dashed var(--ink);background:var(--cream)}
+  .pack-tray__head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+  .pack-tray__head .field-label{margin:0;padding:0}
+  .pack-tray__count{font-size:11px;font-weight:900;letter-spacing:.5px}
+  .pack-tray__list{margin:0;padding:0;list-style:none;display:grid;gap:7px}
+  .pack-slot{display:flex;align-items:center;gap:10px;padding:7px 9px;border:1px solid var(--ink);background:var(--cream);font-size:12px}
+  .pack-slot.is-active{background:var(--tan);box-shadow:3px 3px 0 var(--gold)}
+  .pack-slot.is-empty{opacity:.7;border-style:dashed}
+  .pack-slot__num{flex:none;width:20px;height:20px;display:grid;place-items:center;background:var(--ink);color:var(--cream);font-size:10px;font-weight:900}
+  .pack-slot__thumb{flex:none;width:34px;height:34px;overflow:hidden;background:var(--tan)}
+  .pack-slot__thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .pack-slot__text{flex:1;min-width:0;display:grid;gap:1px}
+  .pack-slot__text b{font-size:11px;font-weight:900;letter-spacing:.2px}
+  .pack-slot__text span{font-size:10px;opacity:.75}
+  .pack-slot__tag{flex:none;padding:3px 6px;background:var(--gold);border:1px solid var(--ink);font-size:8px;font-weight:900;letter-spacing:.5px;text-transform:uppercase}
+  .pack-slot__tag--low{background:var(--rust);color:var(--cream)}
+  .pack-slot__edit{flex:none;padding:0;border:0;background:none;color:var(--ink);font-size:10px;font-weight:900;letter-spacing:.4px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+  .band-swatch__media{position:relative}
+  .band-swatch__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .18s ease}
+  .band-swatch__img--front{opacity:1}
+  .band-swatch:hover .band-swatch__img--back,.band-swatch:focus-visible .band-swatch__img--back{opacity:1}
+  .band-swatch:hover .band-swatch__img--front,.band-swatch:focus-visible .band-swatch__img--front{opacity:0}
+  @media(hover:none){.band-swatch__img--back{display:none}.band-swatch__img--front{opacity:1!important}}
+  .band-swatch__flag{position:absolute;left:0;right:0;bottom:0;padding:3px 2px;background:var(--gold);border-top:1px solid var(--ink);font-size:8px;font-weight:900;letter-spacing:.4px;line-height:1.2;text-transform:uppercase;text-align:center}
+  .band-swatch__flag--low{background:var(--rust);color:var(--cream)}
+  .band-swatch__flag--stock{background:#dbe7d2;color:var(--ink)}
+  .preorder-callout{margin:0;padding:12px 14px;border:2px solid var(--ink);background:var(--gold);font-size:13px;line-height:1.5}
+  .preorder-callout strong{display:block;margin-bottom:3px;font-size:10px;font-weight:950;letter-spacing:1.2px;text-transform:uppercase}
+  .lowstock-callout{margin:0;padding:12px 14px;border:2px solid var(--rust);background:var(--cream);font-size:13px;line-height:1.5}
+  .lowstock-callout strong{display:block;margin-bottom:3px;color:var(--rust);font-size:10px;font-weight:950;letter-spacing:1.2px;text-transform:uppercase}
+  .product-form.is-pack .shopify-payment-button{display:none}
+  @media(max-width:480px){.pack-grid{grid-template-columns:repeat(2,1fr)}}
+  /* Buy box order test: color, size, then pack. Only applies when data-buybox-order="color_first". */
+  .band-options[data-buybox-order="color_first"] [data-step="color"]{order:1}
+  .band-options[data-buybox-order="color_first"] [data-step="size"]{order:2}
+  .band-options[data-buybox-order="color_first"] .lowstock-callout{order:3}
+  .band-options[data-buybox-order="color_first"] .preorder-callout{order:4}
+  .band-options[data-buybox-order="color_first"] [data-step="pack"]{order:5}
+  .band-options[data-buybox-order="color_first"] .pack-tray{order:6}
+</style>
+<script src="{{ 'band-pack-builder.js' | asset_url }}" defer></script>

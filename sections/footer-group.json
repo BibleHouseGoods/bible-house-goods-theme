@@ -1,6 +1,1 @@
-{
-  "type": "footer",
-  "name": "Footer group",
-  "sections": { "footer": { "type": "footer", "settings": {} } },
-  "order": ["footer"]
-}
+{"type":"footer","name":"Footer group","sections":{"footer":{"type":"footer","blocks":{"menu_4nAaVY":{"type":"menu","settings":{"heading":"Explore","menu":"footer"}}},"block_order":["menu_4nAaVY"],"custom_css":[],"settings":{}}},"order":["footer"]}

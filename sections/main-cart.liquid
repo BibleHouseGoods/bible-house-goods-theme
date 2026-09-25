@@ -1,65 +1,128 @@
-{% liquid
-  assign cart_has_preorder = false
-  for item in cart.items
-    assign item_has_preorder_property = false
-    for property in item.properties
-      if property.first == 'Shipping status' and property.last contains 'Preorder'
-        assign item_has_preorder_property = true
-      endif
-    endfor
-    if item_has_preorder_property
-      assign cart_has_preorder = true
-      break
-    elsif item.variant.inventory_management and item.variant.inventory_quantity <= 0 and item.variant.inventory_policy == 'continue'
-      assign cart_has_preorder = true
-      break
-    endif
-  endfor
-%}
 <section class="cart-page page-width">
   <span class="eyebrow">Your order</span><h1 class="display-title">Cart</h1>
-  {% if cart.empty? %}
-    <div class="empty-state"><p>Your cart is currently empty.</p><a class="button" href="{{ routes.all_products_collection_url }}">Continue shopping</a></div>
-  {% else %}
-    {% if cart_has_preorder %}
-      <aside class="cart-preorder-notice">
-        <strong>Your order includes a preorder.</strong>
-        <p>Preorder items are expected to ship in 3–4 weeks. If your order also includes in-stock items, the complete order will ship together when every item is ready.</p>
+  {% if cart.empty? %}<div class="empty-state"><p>Your cart is currently empty.</p><a class="button" href="{{ routes.all_products_collection_url }}">Continue shopping</a></div>{% else %}
+    {% assign has_preorder = false %}{% for item in cart.items %}{% for p in item.properties %}{% if p.first == 'Ships' and p.last != blank %}{% assign has_preorder = true %}{% endif %}{% endfor %}{% endfor %}
+    {% if has_preorder %}<p class="cart-preorder-banner"><strong>PREORDER · expected to ship in 3–4 weeks</strong> Your entire order will ship together when all bands are ready.</p>{% endif %}
+
+    {%- comment -%} Second-band nudge: shows only when the cart holds exactly one Bible Band on a single line. Bumping that line to qty 2 triggers the automatic "2 for $29.99" discount. {%- endcomment -%}
+    {%- liquid
+      assign band_qty = 0
+      assign band_lines = 0
+      assign band_line = 0
+      for item in cart.items
+      
+        if item.product.handle == 'the-bible-band'
+          assign band_qty = band_qty | plus: item.quantity
+          assign band_lines = band_lines | plus: 1
+          assign band_line = forloop.index
+          assign band_item = item
+        endif
+      endfor
+    -%}
+    {%- if band_qty == 1 and band_lines == 1 -%}
+      {%- liquid
+        assign tier_two_raw = 'products.bible_band.tier_two_price' | t | remove: '$' | remove: ','
+        assign tier_two_cents = tier_two_raw | times: 100 | round
+        assign second_cents = tier_two_cents | minus: band_item.original_price
+      -%}
+      {%- if second_cents > 0 and second_cents < band_item.original_price -%}
+        <aside class="second-band">
+          <div class="second-band__text">
+            <p class="second-band__kicker">One to wear, one to give</p>
+            <p class="second-band__head">Add a second band for {{ second_cents | money }}</p>
+            <p class="second-band__sub">Two bands are {{ tier_two_cents | money }} together. The discount applies automatically at checkout — no code needed.</p>
+          </div>
+          <div class="second-band__actions">
+            <a class="button button--gold second-band__cta" href="{{ routes.cart_change_url }}?line={{ band_line }}&amp;quantity=2">Add a second — {{ second_cents | money }}</a>
+            <a class="second-band__alt" href="{{ band_item.product.url }}">Pick a different color</a>
+          </div>
+        </aside>
+      {%- endif -%}
+    {%- endif -%}
+
+    {%- liquid
+      assign gift_ready_product = all_products['gift-ready-packaging']
+      assign gift_ready_variant = gift_ready_product.selected_or_first_available_variant
+      assign gift_ready_in_cart = false
+      for item in cart.items
+        if item.product.handle == 'gift-ready-packaging'
+          assign gift_ready_in_cart = true
+        endif
+      endfor
+    -%}
+    {% if band_qty > 0 and gift_ready_product != blank and gift_ready_variant.available and gift_ready_in_cart == false %}
+      <aside class="cart-gift-ready">
+        {%- if gift_ready_product.featured_media != blank -%}
+          <img src="{{ gift_ready_product.featured_media | image_url: width: 264 }}" alt="Bible House Goods gift-ready stamped kraft sack with a Bible Band and gift tag" width="900" height="1600" loading="lazy">
+        {%- endif -%}
+        <div>
+          <h2>Make it gift-ready — {{ gift_ready_variant.price | money }}</h2>
+          <p>Stamped kraft sack, colored raffia, and a gift tag—ready for you to give.</p>
+          <form method="post" action="{{ routes.cart_add_url }}">
+            <input type="hidden" name="id" value="{{ gift_ready_variant.id }}">
+            <input type="hidden" name="quantity" value="1">
+            <input type="hidden" name="properties[Gift fulfillment]" value="Ship to buyer; include blank gift tag">
+            <input type="hidden" name="return_to" value="/cart">
+            <button class="button button--gold" type="submit">Add gift-ready packaging</button>
+          </form>
+        </div>
       </aside>
+    {% elsif gift_ready_in_cart %}
+      <aside class="cart-gift-ready cart-gift-ready--added"><p><strong>Gift-Ready Packaging added.</strong> Your order will include the stamped sack, colored raffia, and gift tag.</p></aside>
     {% endif %}
+
     <form action="{{ routes.cart_url }}" method="post">
-      <table class="cart-table">
-        <thead><tr><th>Product</th><th>Price</th><th>Quantity</th><th>Total</th></tr></thead>
-        <tbody>
-          {% for item in cart.items %}
-            {% assign item_is_preorder = false %}
-            {% for property in item.properties %}
-              {% if property.first == 'Shipping status' and property.last contains 'Preorder' %}{% assign item_is_preorder = true %}{% endif %}
-            {% endfor %}
-            {% if item.variant.inventory_management and item.variant.inventory_quantity <= 0 and item.variant.inventory_policy == 'continue' %}{% assign item_is_preorder = true %}{% endif %}
-            <tr>
-              <td><div class="cart-product">
-                {% if item.image %}{{ item.image | image_url: width: 220 | image_tag: loading: 'lazy', alt: item.title }}{% endif %}
-                <div>
-                  <a href="{{ item.url }}"><strong>{% render 'trademark-title', title: item.product.title %}</strong></a>
-                  {% unless item.product.has_only_default_variant %}<p>{{ item.variant.title }}</p>{% endunless %}
-                  {% if item_is_preorder %}<p class="cart-property cart-property--preorder"><strong>Preorder:</strong> Expected to ship in 3–4 weeks.</p>{% endif %}
-                  {% for property in item.properties %}
-                    {% assign property_first_character = property.first | slice: 0 %}
-                    {% unless property.last == blank or property_first_character == '_' or property.first == 'Shipping status' %}<p class="cart-property"><strong>{{ property.first }}:</strong> {{ property.last }}</p>{% endunless %}
-                  {% endfor %}
-                  <a href="{{ item.url_to_remove }}">Remove</a>
-                </div>
-              </div></td>
-              <td>{{ item.final_price | money }}</td>
-              <td><label class="visually-hidden" for="Quantity-{{ forloop.index }}">Quantity for {{ item.product.title }}</label><input id="Quantity-{{ forloop.index }}" type="number" name="updates[]" value="{{ item.quantity }}" min="0"></td>
-              <td>{{ item.final_line_price | money }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <table class="cart-table"><thead><tr><th>Product</th><th>Price</th><th>Quantity</th><th>Total</th></tr></thead><tbody>{% for item in cart.items %}<tr><td><div class="cart-product">{% if item.image %}{{ item.image | image_url: width: 220 | image_tag: loading: 'lazy', alt: item.title }}{% endif %}<div><a href="{{ item.url }}"><strong>{% render 'trademark-title', title: item.product.title %}</strong></a>{% unless item.product.has_only_default_variant %}<p>{{ item.variant.title }}</p>{% endunless %}{% for property in item.properties %}{% assign property_first_character = property.first | slice: 0 %}{% unless property.last == blank or property_first_character == '_' %}{% if property.first == 'Ships' %}<p class="cart-property cart-preorder-line"><strong>{{ property.last }}</strong></p>{% else %}<p class="cart-property"><strong>{{ property.first }}:</strong> {{ property.last }}</p>{% endif %}{% endunless %}{% endfor %}<a href="{{ item.url_to_remove }}">Remove</a></div></div></td><td>{{ item.final_price | money }}</td><td><label class="visually-hidden" for="Quantity-{{ forloop.index }}">Quantity for {{ item.product.title }}</label><input id="Quantity-{{ forloop.index }}" type="number" name="updates[]" value="{{ item.quantity }}" min="0"></td><td>{{ item.final_line_price | money }}</td></tr>{% endfor %}</tbody></table>
+      <div class="cart-gift-note">
+        <label class="field-label" for="CartNote">Sending this as a gift?</label>
+        <p class="cart-gift-note__help">Add a short note and we will include it with the order. Leave it blank if this one is for you.</p>
+        <textarea id="CartNote" name="note" rows="3" placeholder="For example: Happy baptism day, Ruby. We love you. — Nana">{{ cart.note }}</textarea>
+        <small class="cart-gift-note__save">Your note saves when you press Update cart or Checkout.</small>
+      </div>
       <div class="cart-footer"><div class="cart-summary"><p class="cart-summary__total">Subtotal: {{ cart.total_price | money }}</p><p>Taxes and shipping calculated at checkout.</p><div class="govx-discount"><i data-govx-id></i></div><div class="button-row"><a class="button cart-keep-shopping" href="{{ all_products['the-bible-band'].url | default: routes.all_products_collection_url }}">{{ 'cart.keep_shopping' | t }}</a><button class="button" type="submit" name="update">Update cart</button><button class="button button--gold" type="submit" name="checkout" data-checkout-start="cart">Checkout</button></div></div></div>
     </form>
+{%- liquid
+  assign has_band_for_soap = false
+  assign has_soap_addon = false
+  for item in cart.items
+    if item.product.handle == 'the-bible-band'
+      assign has_band_for_soap = true
+    endif
+    case item.product.handle
+      when 'bro-bar-original-rugged-grit-soap', 'boomtown-gold-leather-cedar-sandalwood-rose-soap', 'bougie-baptist-goats-milk-soap-lavender-eucalyptus-handmade-cocoa-butter-bar-soap-saver', 'east-texas-pine-curtain-tallow-soap-leather-rose-oilfield-heritage-handmade-bar-soap-saver'
+        assign has_soap_addon = true
+    endcase
+  endfor
+-%}
+{% if band_qty > 0 and has_soap_addon == false %}
+{% assign addon_handles = 'bro-bar-original-rugged-grit-soap,boomtown-gold-leather-cedar-sandalwood-rose-soap,bougie-baptist-goats-milk-soap-lavender-eucalyptus-handmade-cocoa-butter-bar-soap-saver,east-texas-pine-curtain-tallow-soap-leather-rose-oilfield-heritage-handmade-bar-soap-saver' | split: ',' %}
+<section class="cart-soap-addon" aria-labelledby="cart-soap-addon-heading"><h2 id="cart-soap-addon-heading">Add a soap for $6</h2><p>Your Bible Band unlocks one $6 soap. Discount applies automatically.</p><div class="cart-soap-addon__grid">
+{% for addon_handle in addon_handles %}{% assign addon_product = all_products[addon_handle] %}{% if addon_product.available %}{% assign addon_variant = addon_product.selected_or_first_available_variant %}
+<article class="cart-soap-addon__card">{{ addon_product.featured_image | image_url: width: 500 | image_tag: loading: 'lazy', alt: addon_product.title, class: 'cart-soap-addon__image' }}<h3>{{ addon_product.title }}</h3><p><s>$10</s> <strong>$6 with your Bible Band</strong></p><form method="post" action="{{ routes.cart_add_url }}"><input type="hidden" name="id" value="{{ addon_variant.id }}"><input type="hidden" name="quantity" value="1"><input type="hidden" name="return_to" value="/cart"><button class="button cart-soap-addon__button" type="submit">Add soap for $6</button></form></article>
+{% endif %}{% endfor %}</div></section>{% endif %}
+{% style %}
+.cart-soap-addon{max-width:var(--page-width);margin:26px auto;padding:22px;border:2px solid var(--ink);background:var(--tan);box-shadow:5px 5px 0 var(--gold)}.cart-soap-addon h2{margin:0 0 6px;font-size:24px}.cart-soap-addon>p{margin:0 0 18px}.cart-soap-addon__grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.cart-soap-addon__card{display:flex;min-width:0;flex-direction:column;padding:10px;border:1px solid var(--ink);background:var(--cream)}.cart-soap-addon__image{width:100%;aspect-ratio:1;object-fit:cover;margin-bottom:9px}.cart-soap-addon__card h3{margin:0 0 7px;font-size:14px;line-height:1.3}.cart-soap-addon__card p{margin:0 0 10px;font-size:13px}.cart-soap-addon__card form{margin-top:auto}.cart-soap-addon__button{width:100%;min-height:42px;padding:9px 7px;font-size:12px}@media(max-width:749px){.cart-soap-addon{margin:20px 0;padding:16px;box-shadow:4px 4px 0 var(--gold)}.cart-soap-addon__grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+{% endstyle %}
+
+
+
   {% endif %}
 </section>
 {% schema %}{"name":"Cart","settings":[]}{% endschema %}
+{% stylesheet %}
+  .cart-preorder-banner{margin:0 0 20px;padding:14px 18px;border:2px solid var(--ink);background:var(--gold);font-size:14px;line-height:1.55}.cart-preorder-banner strong{display:block;margin-bottom:3px;font-size:11px;letter-spacing:.8px;text-transform:uppercase}.cart-preorder-line{display:inline-block;margin:7px 0 0;padding:6px 8px;border:1px solid var(--ink);background:var(--gold);font-size:10px;letter-spacing:.5px;text-transform:uppercase}
+  .cart-gift-note{margin:22px 0 0;padding:18px 20px;border:2px solid var(--ink);background:var(--tan)}
+  .cart-gift-note .field-label{display:block;margin-bottom:6px}
+  .cart-gift-note__help{margin:0 0 10px;font-size:13px;line-height:1.55}
+  .cart-gift-note textarea{width:100%;padding:10px 12px;border:2px solid var(--ink);background:var(--cream);color:var(--ink);font:inherit;font-size:14px;line-height:1.5;resize:vertical}
+  .cart-gift-note__save{display:block;margin-top:8px;font-size:11px;opacity:.7}
+  .second-band{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin:0 0 22px;padding:16px 20px;border:2px solid var(--ink);background:var(--tan);box-shadow:5px 5px 0 var(--gold)}
+  .second-band__text{flex:1 1 260px;min-width:0}
+  .second-band__kicker{margin:0 0 4px;font-size:10px;font-weight:950;letter-spacing:1.2px;text-transform:uppercase;opacity:.75}
+  .second-band__head{margin:0 0 5px;font-size:18px;font-weight:900;line-height:1.25}
+  .second-band__sub{margin:0;font-size:13px;line-height:1.5;opacity:.85}
+  .second-band__actions{flex:0 0 auto;display:flex;flex-direction:column;align-items:stretch;gap:7px}
+  .second-band__cta{text-align:center;white-space:nowrap}
+  .second-band__alt{font-size:11px;font-weight:800;letter-spacing:.3px;text-align:center;text-decoration:underline;text-underline-offset:3px;opacity:.8}
+  @media(max-width:600px){.second-band{padding:14px 16px;box-shadow:4px 4px 0 var(--gold)}.second-band__actions{width:100%}.second-band__head{font-size:16px}}
+{% endstylesheet %}
