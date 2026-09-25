@@ -1,6 +1,11 @@
 {% doc %}
 Renders the Judge.me star rating badge for a product.
 
+Always uses live Judge.me data. Note: the badge metafield quotes attributes with single
+quotes (data-number-of-reviews='4'), so the parser below detects the quote character
+rather than assuming double quotes. The previous version assumed double quotes, never
+matched, and fell back to hardcoded theme settings that drifted out of date.
+
 @param {product} product - The product whose rating is displayed.
 
 @example
@@ -10,28 +15,24 @@ Renders the Judge.me star rating badge for a product.
 {% if product != blank %}
   {% liquid
     assign badge_markup = product.metafields.judgeme.badge | default: ''
-    assign review_count = 0
-    assign review_rating = 0
-    if badge_markup contains 'data-number-of-reviews="'
-      assign review_count = badge_markup | split: 'data-number-of-reviews="' | last | split: '"' | first | plus: 0
-    endif
-    if product.handle == 'the-bible-band' and review_count == 0 and settings.bible_band_review_count > 0
-      assign review_count = settings.bible_band_review_count
-      assign review_rating = settings.bible_band_review_rating
+    assign has_live_data = false
+    assign live_count = 0
+    if badge_markup contains 'data-number-of-reviews='
+      assign after_count = badge_markup | split: 'data-number-of-reviews=' | last
+      assign quote_char = after_count | slice: 0
+      assign live_count = after_count | remove_first: quote_char | split: quote_char | first | plus: 0
+      if live_count > 0
+        assign has_live_data = true
+      endif
     endif
   %}
-  {% if badge_markup contains 'data-number-of-reviews="' and review_count > 0 and review_rating == 0 %}
+  {% if has_live_data %}
     <div
       class="jdgm-widget jdgm-preview-badge"
       data-id="{{ product.id }}"
       data-auto-install="false"
     >
       {{ badge_markup }}
-    </div>
-  {% elsif review_count > 0 %}
-    <div class="judgeme-rating-fallback" aria-label="{{ review_rating }} out of 5 stars, {{ review_count }} reviews">
-      <span aria-hidden="true">★★★★★</span>
-      <small>{{ review_rating }} · {{ review_count }} {% if review_count == 1 %}{{ 'general.social_proof.review' | t }}{% else %}{{ 'general.social_proof.reviews' | t }}{% endif %}</small>
     </div>
   {% else %}
     <div class="judgeme-rating-empty" aria-label="{{ 'general.social_proof.no_verified_reviews' | t }}">
@@ -42,7 +43,11 @@ Renders the Judge.me star rating badge for a product.
 {% endif %}
 
 {% stylesheet %}
-  .judgeme-rating-empty,.judgeme-rating-fallback{display:inline-flex;align-items:center;gap:8px;color:var(--rust)}
-  .judgeme-rating-empty>span,.judgeme-rating-fallback>span{font-size:14px;letter-spacing:2px;line-height:1}
-  .judgeme-rating-empty small,.judgeme-rating-fallback small{color:var(--brown);font-size:10px;font-weight:900;letter-spacing:.8px;text-transform:uppercase}
+  .judgeme-rating-empty{display:inline-flex;align-items:center;gap:8px;color:var(--rust)}
+  .judgeme-rating-empty>span{font-size:14px;letter-spacing:2px;line-height:1}
+  .judgeme-rating-empty small{color:var(--brown);font-size:10px;font-weight:900;letter-spacing:.8px;text-transform:uppercase}
+  .jdgm-preview-badge{display:inline-flex;align-items:center}
+  .jdgm-preview-badge .jdgm-prev-badge{display:inline-flex !important;align-items:center;gap:8px}
+  .jdgm-preview-badge .jdgm-prev-badge__stars{color:var(--gold);font-size:14px;letter-spacing:2px;line-height:1}
+  .jdgm-preview-badge .jdgm-prev-badge__text{color:var(--brown);font-size:10px;font-weight:900;letter-spacing:.8px;text-transform:uppercase}
 {% endstylesheet %}

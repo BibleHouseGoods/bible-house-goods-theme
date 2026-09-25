@@ -1,0 +1,397 @@
+{% liquid
+  assign current = product.selected_or_first_available_variant
+  assign product_form_id = 'LandingForm-' | append: section.id
+  assign hero_image = section.settings.hero_image | default: product.featured_image
+  for opt in product.options_with_values
+    if opt.name == 'Size'
+      assign size_option = opt
+    elsif opt.name == 'Color'
+      assign color_option = opt
+    endif
+  endfor
+%}
+<div class="bb-lp" data-landing-angle="{{ section.settings.angle | escape }}">
+  <header class="bb-lp__nav bb-lp__wrap">
+    <a class="bb-lp__brand" href="{{ product.url }}">THE BIBLE BAND<span>KEEP GOD’S WORD CLOSE.</span></a>
+    <a class="bb-lp__nav-cta" href="#ChooseBand-{{ section.id }}">{{ section.settings.cta | escape }} <span aria-hidden="true">↗</span></a>
+  </header>
+  <section class="bb-lp__hero bb-lp__wrap">
+    <div class="bb-lp__hero-copy">
+      <p class="bb-lp__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+      <h1>{{ section.settings.headline | escape }} <em>{{ section.settings.headline_accent | escape }}</em></h1>
+      <p class="bb-lp__intro">{{ section.settings.intro | escape }}</p>
+      <a class="bb-lp__button" href="#ChooseBand-{{ section.id }}" data-analytics-event="landing_cta_click" data-analytics-label="{{ section.settings.angle | escape }}_hero">{{ section.settings.cta | escape }} <span aria-hidden="true">→</span></a>
+      <p class="bb-lp__terms">{{ product.price_min | money_with_currency }} · {{ section.settings.terms | escape }}</p>
+      <div class="bb-lp__hero-proof"><span class="bb-lp__stars" aria-label="5 out of 5 stars">★★★★★</span><p>“<mark>{{ section.settings.hero_quote | escape }}</mark>”</p><small>{{ section.settings.hero_author | escape }} · {{ section.settings.verified_label | escape }}</small></div>
+    </div>
+    <figure class="bb-lp__hero-visual">
+      {{ hero_image | image_url: width: 1200 | image_tag: widths: '400,600,900,1200', sizes: '(max-width: 800px) 100vw, 50vw', loading: 'eager', fetchpriority: 'high', class: 'bb-lp__hero-image' }}
+      <figcaption><span>{{ section.settings.image_label | escape }}</span><strong>{{ section.settings.image_caption | escape }}</strong><span aria-hidden="true">↗</span></figcaption>
+    </figure>
+  </section>
+  <div class="bb-lp__strip"><span>{{ section.settings.strip_1 | escape }}</span><span>{{ section.settings.strip_2 | escape }}</span><span>{{ section.settings.strip_3 | escape }}</span></div>
+  <section class="bb-lp__section bb-lp__wrap">
+    <p class="bb-lp__eyebrow">{{ section.settings.proof_kicker | escape }}</p><h2>{{ section.settings.proof_heading | escape }}</h2>
+    <div class="bb-lp__reviews">{% for block in section.blocks %}{% if block.type == 'review' %}<figure {{ block.shopify_attributes }}><span class="bb-lp__stars" aria-label="5 out of 5 stars">★★★★★</span><blockquote>“{{ block.settings.before | escape }}<mark>{{ block.settings.highlight | escape }}</mark>{{ block.settings.after | escape }}”</blockquote><figcaption><strong>{{ block.settings.author | escape }}</strong><span>{{ section.settings.verified_label | escape }} · {{ section.settings.excerpt_label | escape }}</span></figcaption></figure>{% endif %}{% endfor %}</div>
+    <a class="bb-lp__text-link" href="{{ product.url }}#judgeme_product_reviews">{{ section.settings.review_link | escape }} ↗</a>
+  </section>
+  <section class="bb-lp__section bb-lp__wrap bb-lp__offer" id="ChooseBand-{{ section.id }}">
+    <div class="bb-lp__offer-copy"><p class="bb-lp__eyebrow">{{ section.settings.offer_kicker | escape }}</p><h2>{{ section.settings.offer_heading | escape }}</h2><p>{{ section.settings.offer_copy | escape }}</p><div class="bb-lp__video">{% if section.settings.demo_video != blank %}{{ section.settings.demo_video | video_tag: controls: true, autoplay: false, loop: false, muted: true, playsinline: true, preload: 'none', image_size: '800x' }}{% endif %}</div><ul class="bb-lp__included">{% for block in section.blocks %}{% if block.type == 'included' %}<li {{ block.shopify_attributes }}>{{ block.settings.text | escape }}</li>{% endif %}{% endfor %}</ul><p class="bb-lp__sample"><a class="bb-lp__text-link" href="https://thebibleband.com/today" target="_blank" rel="noopener">{{ section.settings.demo_link | escape }} ↗</a></p></div>
+    <div class="bb-lp__buybox"><h3>{{ section.settings.product_heading | escape }}</h3><p class="bb-lp__price" data-product-price>{{ current.price | money_with_currency }}</p><p class="bb-lp__fine">{{ section.settings.terms | escape }}</p>
+      {% form 'product', product, id: product_form_id, class: 'product-form', data-product-form: '' %}
+        <input type="hidden" name="id" value="{{ current.id }}">
+        {% if size_option != blank and color_option != blank %}{% render 'band-pack-builder', product: product, section: section, current: current, size_option: size_option, color_option: color_option %}{% endif %}
+        <div class="bb-lp__fallback"><label for="Variant-{{ section.id }}">{{ section.settings.variant_label | escape }}</label><select id="Variant-{{ section.id }}" data-variant-select data-product-title="{{ product.title | escape }}">{% for variant in product.variants %}<option value="{{ variant.id }}" data-available="{{ variant.available }}" data-price="{{ variant.price | money_with_currency }}" data-variant-title="{{ variant.title | escape }}"{% if variant.id == current.id %} selected{% endif %}>{{ variant.title | escape }}{% unless variant.available %} — {{ section.settings.sold_out | escape }}{% endunless %}</option>{% endfor %}</select></div>
+        <input type="hidden" name="quantity" value="1" data-band-quantity>
+        <button class="button bb-lp__button" type="submit" data-primary-product-submit data-product-title="{{ product.title | escape }}"{% unless current.available %} disabled{% endunless %}>{% if current.available %}{{ section.settings.add_to_cart | escape }}{% else %}{{ section.settings.sold_out | escape }}{% endif %}</button>
+        <p class="bb-lp__fine">{{ section.settings.shipping_note | escape }}</p>
+        {% if shop.refund_policy != blank %}<a class="bb-lp__text-link" href="{{ shop.refund_policy.url }}">{{ section.settings.returns_link | escape }}</a>{% endif %}
+      {% endform %}
+      <noscript><p>{{ section.settings.nojs_note | escape }} <a href="{{ product.url }}">{{ section.settings.product_heading | escape }}</a></p></noscript>
+    </div>
+  </section>
+  <section class="bb-lp__section bb-lp__faq bb-lp__wrap"><p class="bb-lp__eyebrow">{{ section.settings.faq_kicker | escape }}</p><h2>{{ section.settings.faq_heading | escape }}</h2>{% for block in section.blocks %}{% if block.type == 'faq' %}<details {{ block.shopify_attributes }}><summary>{{ block.settings.question | escape }}</summary><p>{{ block.settings.answer | escape }}</p></details>{% endif %}{% endfor %}<a class="bb-lp__button bb-lp__last-cta" href="#ChooseBand-{{ section.id }}">{{ section.settings.cta | escape }} →</a></section>
+  <footer class="bb-lp__footer bb-lp__wrap"><p>© {{ 'now' | date: '%Y' }} Bible House Goods LLC · The Bible Band™</p><div><a href="{{ routes.root_url }}pages/contact">{{ section.settings.contact_label | escape }}</a>{% if shop.privacy_policy != blank %}<a href="{{ shop.privacy_policy.url }}">{{ shop.privacy_policy.title | escape }}</a>{% endif %}{% if shop.refund_policy != blank %}<a href="{{ shop.refund_policy.url }}">{{ shop.refund_policy.title | escape }}</a>{% endif %}</div></footer>
+  <div class="bb-lp__mobile"><span>{{ product.price_min | money_with_currency }}<small>{{ section.settings.mobile_note | escape }}</small></span><a class="bb-lp__button" href="#ChooseBand-{{ section.id }}">{{ section.settings.cta | escape }} →</a></div>
+</div>
+{% stylesheet %}
+.bb-lp{--lp-black:#171714;--lp-paper:#f9f6ef;--lp-gold:#f4c451;background:var(--lp-paper);color:var(--lp-black);font:16px/1.65 Arial,Helvetica,sans-serif}.bb-lp *{box-sizing:border-box}.bb-lp a{color:inherit}.bb-lp h1,.bb-lp h2,.bb-lp h3,.bb-lp p,.bb-lp figure{margin:0}.bb-lp__wrap{max-width:1240px;margin:0 auto;padding-inline:40px}.bb-lp__nav{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:100px;border-bottom:1px solid #dcd7ca}.bb-lp__brand{font-size:19px;font-weight:900;letter-spacing:-.8px;text-decoration:none;line-height:1.2}.bb-lp__brand span{display:block;font-size:9px;letter-spacing:2px;margin-top:6px}.bb-lp__nav-cta{font-size:13px;font-weight:800;text-underline-offset:5px}.bb-lp__hero{display:grid;grid-template-columns:1.1fr 1fr;gap:55px;align-items:center;padding-block:64px 76px}.bb-lp__eyebrow{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px!important}.bb-lp h1{font-size:clamp(42px,4.4vw,66px);font-weight:900;letter-spacing:-3px;line-height:1.04;text-transform:none}.bb-lp h1 em{font-style:normal;text-decoration:underline;text-decoration-color:var(--lp-gold);text-decoration-thickness:7px;text-underline-offset:7px}.bb-lp__intro{font-size:18px;line-height:1.65;margin-block:26px!important;max-width:550px}.bb-lp__button{display:inline-flex;justify-content:center;align-items:center;gap:25px;min-height:56px;padding:14px 25px;background:var(--lp-gold);color:var(--lp-black)!important;border:2px solid var(--lp-black);box-shadow:4px 4px 0 var(--lp-black);font-size:16px;font-weight:850;text-decoration:none;line-height:1.3;text-transform:none;letter-spacing:0;cursor:pointer}.bb-lp__button:hover{background:#ffda7b;box-shadow:2px 2px 0 var(--lp-black)}.bb-lp a:focus-visible,.bb-lp button:focus-visible,.bb-lp summary:focus-visible{outline:3px solid #925216;outline-offset:5px}.bb-lp__button:disabled{opacity:.5;cursor:not-allowed}.bb-lp__terms{font-size:12px;margin-top:16px!important}.bb-lp__hero-proof{margin-top:30px;border-top:1px solid #dcd7ca;padding-top:20px}.bb-lp__stars{font-size:15px;letter-spacing:3px;color:#72501b}.bb-lp__hero-proof p{font-size:16px;font-weight:700;margin:6px 0}.bb-lp__hero-proof small{font-size:11px;color:#57574f}.bb-lp mark{background:#fae394;color:var(--lp-black);padding:1px 3px;box-decoration-break:clone;-webkit-box-decoration-break:clone}.bb-lp__hero-visual{position:relative;border:1px solid var(--lp-black);background:#e3ddcf;align-self:stretch;min-height:530px;overflow:hidden}.bb-lp__hero-image{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}.bb-lp__hero-visual figcaption{position:absolute;bottom:18px;left:18px;right:18px;background:var(--lp-paper);padding:18px 20px;border:1px solid var(--lp-black);display:grid;grid-template-columns:1fr auto;line-height:1.3}.bb-lp__hero-visual figcaption span:first-child{grid-column:1;font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}.bb-lp__hero-visual figcaption strong{grid-column:1;font-size:19px;letter-spacing:-.5px}.bb-lp__hero-visual figcaption span:last-child{grid-column:2;grid-row:1/3;font-size:28px;align-self:center}.bb-lp__strip{display:flex;justify-content:center;gap:70px;background:var(--lp-black);color:var(--lp-paper);padding:20px 24px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}.bb-lp__section{padding-block:80px}.bb-lp h2{font-size:clamp(32px,3.6vw,48px);font-weight:850;letter-spacing:-1.7px;line-height:1.12;max-width:700px}.bb-lp h3{font-size:22px;line-height:1.25;letter-spacing:-.6px}.bb-lp__split{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center}.bb-lp__body p+p{margin-top:18px}.bb-lp__steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:45px;border-top:1px solid #c9c4b8;padding-top:28px}.bb-lp__number{font-size:12px;font-weight:800;color:#686357}.bb-lp__steps h3{margin:16px 0 12px}.bb-lp__steps p{font-size:15px}.bb-lp__demo{background:#eae5d9;border-block:1px solid #ccc5b6}.bb-lp__text-link{font-size:13px;font-weight:700;text-underline-offset:4px}.bb-lp__video{justify-self:center;width:100%;max-width:420px}.bb-lp__video video{width:100%;max-height:500px;display:block;background:#171714;border:8px solid #171714;border-radius:22px;object-fit:contain}.bb-lp__video img{width:100%;height:auto}.bb-lp__video p{font-size:12px;text-align:center;margin-top:15px}.bb-lp__fine{font-size:12px;color:#57574f;margin-top:14px!important}.bb-lp__reviews{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:35px 0 25px}.bb-lp__reviews figure{padding:30px;border:1px solid #cbc5b7;background:#fffdf8}.bb-lp__reviews blockquote{font-size:24px;line-height:1.5;letter-spacing:-.5px;font-weight:700;margin:20px 0 25px}.bb-lp__reviews figcaption{border-top:1px solid #dcd7ca;padding-top:16px;display:grid;font-size:13px}.bb-lp__reviews figcaption span{font-size:11px;color:#57574f;margin-top:3px}.bb-lp__fit{background:var(--lp-black);color:var(--lp-paper)}.bb-lp__fit .bb-lp__eyebrow{color:var(--lp-gold)}.bb-lp__fit p:last-child{font-size:14px;color:#d2cfc4}.bb-lp__offer{display:grid;grid-template-columns:1fr 1.12fr;gap:60px;align-items:start;scroll-margin-top:24px}.bb-lp__offer-copy>p:not(.bb-lp__eyebrow){margin-top:24px}.bb-lp__offer-image{display:block;width:100%;height:auto;margin:30px 0 24px;border:1px solid #c9c4b8}.bb-lp__included{list-style:none;padding:0;margin:0}.bb-lp__included li{border-bottom:1px solid #dcd7ca;padding:12px 0;font-size:14px}.bb-lp__included li:before{content:'✓';font-weight:800;margin-right:12px}.bb-lp__buybox{padding:30px;border:2px solid var(--lp-black);background:#fffdf8;box-shadow:7px 7px 0 #e2dccd}.bb-lp__price{font-size:29px;font-weight:800;margin:10px 0 0!important;letter-spacing:-1px}.bb-lp__buybox .product-form{margin-top:25px}.bb-lp__buybox .bb-lp__button{width:100%}.bb-lp__fallback{display:none}.no-js .bb-lp__buybox form{display:none}.bb-lp__faq{max-width:900px;padding-top:15px}.bb-lp__faq h2{margin-bottom:30px}.bb-lp__faq details{border-top:1px solid #cbc5b7;padding:20px 0}.bb-lp__faq summary{font-size:17px;font-weight:700;cursor:pointer;list-style:revert}.bb-lp__faq details p{margin-top:15px;font-size:15px}.bb-lp__closing{padding:70px 0;background:#eae5d9;text-align:center;border-block:1px solid #ccc5b6}.bb-lp__closing h2{margin:0 auto 30px;max-width:760px}.bb-lp__closing p{font-size:12px;margin-top:20px}.bb-lp__footer{display:flex;justify-content:space-between;gap:24px;padding-block:30px;font-size:11px}.bb-lp__footer div{display:flex;gap:20px}.bb-lp__mobile{display:none}.bb-lp .pack-pairing{background:#f9f6ef}.bb-lp .product-form{gap:18px}.bb-lp .band-swatch__name{line-height:1.4}
+@media(max-width:800px){.bb-lp__wrap{padding-inline:24px}.bb-lp__nav{min-height:80px}.bb-lp__nav-cta{max-width:135px;font-size:11px;text-align:right}.bb-lp__brand{font-size:16px}.bb-lp__brand span{font-size:8px}.bb-lp__hero{grid-template-columns:1fr;gap:30px;padding-block:36px 40px}.bb-lp h1{font-size:46px;letter-spacing:-2px}.bb-lp__hero-visual{min-height:420px}.bb-lp__strip{gap:18px;font-size:9px;text-align:center;line-height:1.4}.bb-lp__section{padding-block:50px}.bb-lp__split,.bb-lp__offer{grid-template-columns:1fr;gap:28px}.bb-lp__steps{grid-template-columns:1fr;gap:24px;margin-top:28px}.bb-lp__steps article{border-bottom:1px solid #dcd7ca;padding-bottom:24px}.bb-lp__steps h3{margin:7px 0 10px}.bb-lp__reviews{grid-template-columns:1fr}.bb-lp__reviews blockquote{font-size:22px}.bb-lp__buybox{padding:22px;min-width:0}.bb-lp__footer{flex-direction:column;padding-bottom:110px}.bb-lp__mobile{display:flex;position:fixed;z-index:20;bottom:0;left:0;right:0;gap:16px;align-items:center;justify-content:space-between;padding:12px 18px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--lp-black);background:var(--lp-paper)}.bb-lp__mobile>span{font-size:14px;font-weight:800;white-space:nowrap}.bb-lp__mobile small{display:block;font-size:9px;font-weight:400}.bb-lp__mobile .bb-lp__button{min-height:46px;font-size:12px;padding:11px 14px;gap:8px}.bb-lp__faq details{scroll-margin-bottom:100px}.bb-lp__offer{scroll-margin-top:15px}}
+@media(prefers-reduced-motion:no-preference){html:has(.bb-lp){scroll-behavior:smooth}}
+
+.bb-lp__section{padding-block:40px}.bb-lp__hero{padding-block:42px 48px;gap:40px}.bb-lp__hero-visual{min-height:440px}.bb-lp h1{font-size:clamp(40px,4.3vw,62px)}.bb-lp__reviews{grid-template-columns:1fr;margin:20px 0 16px}.bb-lp__reviews figure{padding:22px 26px;border-left:6px solid var(--lp-gold)}.bb-lp__reviews blockquote{font-size:22px;margin:10px 0 14px}.bb-lp__reviews figcaption{padding-top:10px}.bb-lp__offer-copy .bb-lp__video{max-width:290px;margin:24px 0}.bb-lp__offer-copy .bb-lp__video video{max-height:330px}.bb-lp__sample{margin-top:18px!important}.bb-lp__included li{font-size:15px;font-weight:700;padding:9px 0}.bb-lp__strip{font-size:12px;letter-spacing:1px;gap:55px}.bb-lp__last-cta{margin-top:20px}.bb-lp__faq{padding-top:10px}.bb-lp__eyebrow{margin-bottom:12px!important}.bb-lp__intro{margin-block:20px!important}.bb-lp__offer{gap:42px}
+@media(max-width:800px){.bb-lp h1{font-size:40px;letter-spacing:-1.7px}.bb-lp__hero{gap:24px;padding-block:28px 32px}.bb-lp__hero-visual{min-height:310px}.bb-lp__section{padding-block:30px}.bb-lp__strip{font-size:10px;gap:16px;padding:16px}.bb-lp__hero-proof{margin-top:22px;padding-top:14px}.bb-lp__reviews figure{padding:18px}.bb-lp__reviews blockquote{font-size:19px}.bb-lp__offer{gap:24px}.bb-lp__offer-copy .bb-lp__video{max-width:230px}.bb-lp__offer-copy .bb-lp__video video{max-height:270px}.bb-lp__offer-copy>p:not(.bb-lp__eyebrow){margin-top:14px}.bb-lp__buybox{padding:18px}.bb-lp__faq{padding-bottom:38px}}
+{% endstylesheet %}
+
+
+{% schema %}
+{
+  "name": "Bible Band landing page",
+  "settings": [
+    {
+      "type": "text",
+      "id": "cta",
+      "label": "Cta",
+      "default": "Choose my band"
+    },
+    {
+      "type": "text",
+      "id": "terms",
+      "label": "Terms",
+      "default": "Free U.S. shipping · No app · No monthly fee"
+    },
+    {
+      "type": "text",
+      "id": "verified_label",
+      "label": "Verified label",
+      "default": "Verified buyer on Judge.me"
+    },
+    {
+      "type": "text",
+      "id": "excerpt_label",
+      "label": "Excerpt label",
+      "default": "Review excerpt"
+    },
+    {
+      "type": "text",
+      "id": "review_link",
+      "label": "Review link",
+      "default": "Read the original customer reviews"
+    },
+    {
+      "type": "text",
+      "id": "strip_1",
+      "label": "Strip 1",
+      "default": "No app to download"
+    },
+    {
+      "type": "text",
+      "id": "strip_2",
+      "label": "Strip 2",
+      "default": "No monthly fee"
+    },
+    {
+      "type": "text",
+      "id": "strip_3",
+      "label": "Strip 3",
+      "default": "Free U.S. shipping"
+    },
+    {
+      "type": "text",
+      "id": "demo_link",
+      "label": "Demo link",
+      "default": "Try today’s devotion free"
+    },
+    {
+      "type": "text",
+      "id": "proof_kicker",
+      "label": "Proof kicker",
+      "default": "Real customer. Real experience."
+    },
+    {
+      "type": "text",
+      "id": "offer_kicker",
+      "label": "Offer kicker",
+      "default": "Wear. Tap. Read & pray."
+    },
+    {
+      "type": "text",
+      "id": "product_heading",
+      "label": "Product heading",
+      "default": "The Bible Band™"
+    },
+    {
+      "type": "text",
+      "id": "variant_label",
+      "label": "Variant label",
+      "default": "Choose your size and color"
+    },
+    {
+      "type": "text",
+      "id": "add_to_cart",
+      "label": "Add to cart",
+      "default": "Add to cart"
+    },
+    {
+      "type": "text",
+      "id": "sold_out",
+      "label": "Sold out",
+      "default": "Sold out"
+    },
+    {
+      "type": "textarea",
+      "id": "offer_copy",
+      "label": "Offer copy",
+      "default": "Tap with a compatible phone. Open today’s Scripture, devotion, and prayer."
+    },
+    {
+      "type": "textarea",
+      "id": "shipping_note",
+      "label": "Shipping note",
+      "default": "Free U.S. shipping. In stock: typically 5–10 business days. Preorders: see the estimate above. Mixed orders ship together."
+    },
+    {
+      "type": "text",
+      "id": "returns_link",
+      "label": "Returns link",
+      "default": "Read the return policy"
+    },
+    {
+      "type": "text",
+      "id": "nojs_note",
+      "label": "Nojs note",
+      "default": "Turn on JavaScript to choose sizes, colors, and packs here, or visit the main product page."
+    },
+    {
+      "type": "text",
+      "id": "faq_kicker",
+      "label": "Faq kicker",
+      "default": "Three quick answers"
+    },
+    {
+      "type": "text",
+      "id": "faq_heading",
+      "label": "Faq heading",
+      "default": "Good to know."
+    },
+    {
+      "type": "text",
+      "id": "contact_label",
+      "label": "Contact label",
+      "default": "Contact us"
+    },
+    {
+      "type": "text",
+      "id": "mobile_note",
+      "label": "Mobile note",
+      "default": "No monthly fee"
+    },
+    {
+      "type": "text",
+      "id": "pairing_note",
+      "label": "Pairing note",
+      "default": "Mix sizes and colors in your pack."
+    },
+    {
+      "type": "text",
+      "id": "mix_note",
+      "label": "Mix note",
+      "default": "Mix any sizes and colors — your discount applies automatically."
+    },
+    {
+      "type": "text",
+      "id": "size_help_link",
+      "label": "Size help link",
+      "default": "Not sure which size? Measure in 10 seconds →"
+    },
+    {
+      "type": "text",
+      "id": "reversible_note",
+      "label": "Reversible note",
+      "default": "Every band is reversible — a solid side and a patterned side, so each color is really two."
+    },
+    {
+      "type": "text",
+      "id": "preorder_label",
+      "label": "Preorder label",
+      "default": "Preorder"
+    },
+    {
+      "type": "text",
+      "id": "preorder_note",
+      "label": "Preorder note",
+      "default": "expected to ship in 3–4 weeks"
+    },
+    {
+      "type": "textarea",
+      "id": "preorder_copy",
+      "label": "Preorder copy",
+      "default": "This band is on the way. Order now and it is expected to ship in 3–4 weeks. If your pack mixes preorder and in-stock bands, the whole order ships together when all bands are ready. Need it sooner? Choose a size and style marked “Ships now.”"
+    },
+    {
+      "type": "text",
+      "id": "next_batch_message",
+      "label": "Next batch message"
+    },
+    {
+      "type": "video",
+      "id": "demo_video",
+      "label": "Demo video"
+    },
+    {
+      "type": "text",
+      "id": "angle",
+      "label": "Angle",
+      "default": "daily-habit"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "A daily reminder you can wear"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "label": "Headline",
+      "default": "Keep meaning to read your Bible,"
+    },
+    {
+      "type": "text",
+      "id": "headline_accent",
+      "label": "Headline accent",
+      "default": "but forgetting?"
+    },
+    {
+      "type": "textarea",
+      "id": "intro",
+      "label": "Intro",
+      "default": "Make the next step easier to remember. The Bible Band puts a reminder on your wrist—and today’s Scripture, devotion, and prayer a phone tap away."
+    },
+    {
+      "type": "text",
+      "id": "hero_quote",
+      "label": "Hero quote",
+      "default": "Love it keeps me on. Track to have some devotion time in the morning"
+    },
+    {
+      "type": "text",
+      "id": "hero_author",
+      "label": "Hero author",
+      "default": "Marilyn Daggett"
+    },
+    {
+      "type": "image_picker",
+      "id": "hero_image",
+      "label": "Hero image"
+    },
+    {
+      "type": "text",
+      "id": "image_label",
+      "label": "Image label",
+      "default": "The reminder goes with you"
+    },
+    {
+      "type": "text",
+      "id": "image_caption",
+      "label": "Image caption",
+      "default": "Notice it. Tap it. Begin."
+    },
+    {
+      "type": "text",
+      "id": "proof_heading",
+      "label": "Proof heading",
+      "default": "Why they wear it."
+    },
+    {
+      "type": "text",
+      "id": "offer_heading",
+      "label": "Offer heading",
+      "default": "Give your good intention a daily reminder."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "review",
+      "name": "Customer review",
+      "limit": 3,
+      "settings": [
+        {
+          "type": "text",
+          "id": "author",
+          "label": "Author"
+        },
+        {
+          "type": "textarea",
+          "id": "before",
+          "label": "Before highlight"
+        },
+        {
+          "type": "textarea",
+          "id": "highlight",
+          "label": "Highlighted words"
+        },
+        {
+          "type": "textarea",
+          "id": "after",
+          "label": "After highlight"
+        }
+      ]
+    },
+    {
+      "type": "included",
+      "name": "Included feature",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Feature"
+        }
+      ]
+    },
+    {
+      "type": "faq",
+      "name": "Question",
+      "limit": 8,
+      "settings": [
+        {
+          "type": "text",
+          "id": "question",
+          "label": "Question"
+        },
+        {
+          "type": "textarea",
+          "id": "answer",
+          "label": "Answer"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Bible Band landing page"
+    }
+  ]
+}
+{% endschema %}

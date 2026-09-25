@@ -1,0 +1,36 @@
+{%- comment -%}
+  Buy-box notes rendered directly under the Add to Cart button on the Bible Band product page:
+  an estimated delivery window and a one-line phone compatibility note.
+  - The delivery line is server-rendered as a business-day range, then band-pack-builder.js replaces it
+    with real dates (or the preorder note when a preorder band is selected).
+  - Window length and on/off come from the section settings in main-product.liquid.
+  - The compatibility line is the section setting `compat_line`; leave it blank to hide.
+{%- endcomment -%}
+{%- liquid
+  assign compat = section.settings.compat_line
+  assign show_date = true
+  if section.settings.show_delivery_date == false
+    assign show_date = false
+  endif
+  assign n_pmin = section.settings.delivery_processing_min | default: 1
+  assign n_pmax = section.settings.delivery_processing_max | default: 3
+  assign n_smin = section.settings.delivery_shipping_min | default: 5
+  assign n_smax = section.settings.delivery_shipping_max | default: 10
+  assign n_min = n_pmin | plus: n_smin
+  assign n_max = n_pmax | plus: n_smax
+-%}
+{%- if show_date or compat != blank -%}
+  <div class="buy-box-notes">
+    {%- if show_date -%}
+      <p class="buy-box-notes__row"><span data-delivery-label>Estimated delivery:</span> <strong data-delivery-date>{{ n_min }}–{{ n_max }} business days</strong></p>
+    {%- endif -%}
+    {%- if compat != blank -%}
+      <p class="buy-box-notes__row">{{ compat }}</p>
+    {%- endif -%}
+  </div>
+  <style>
+    .buy-box-notes{display:grid;gap:5px;margin:0}
+    .buy-box-notes__row{margin:0;color:var(--brown);font-size:12px;line-height:1.45}
+    .buy-box-notes__row strong{color:var(--ink);font-weight:900}
+  </style>
+{%- endif -%}

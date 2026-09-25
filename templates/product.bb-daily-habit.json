@@ -1,0 +1,116 @@
+{
+  "layout": "bb-landing",
+  "sections": {
+    "landing": {
+      "type": "bb-landing",
+      "settings": {
+        "cta": "Choose my band",
+        "terms": "Free U.S. shipping · No app · No monthly fee",
+        "verified_label": "Verified buyer on Judge.me",
+        "excerpt_label": "Review excerpt",
+        "review_link": "Read the original customer reviews",
+        "strip_1": "No app to download",
+        "strip_2": "No monthly fee",
+        "strip_3": "Free U.S. shipping",
+        "demo_link": "Try today’s devotion free",
+        "proof_kicker": "Real customer. Real experience.",
+        "offer_kicker": "Wear. Tap. Read & pray.",
+        "product_heading": "The Bible Band™",
+        "variant_label": "Choose your size and color",
+        "add_to_cart": "Add to cart",
+        "sold_out": "Sold out",
+        "offer_copy": "Tap with a compatible phone. Open today’s Scripture, devotion, and prayer.",
+        "shipping_note": "Free U.S. shipping. In stock: typically 5–10 business days. Preorders: see the estimate above. Mixed orders ship together.",
+        "returns_link": "Read the return policy",
+        "nojs_note": "Turn on JavaScript to choose sizes, colors, and packs here, or visit the main product page.",
+        "faq_kicker": "Three quick answers",
+        "faq_heading": "Good to know.",
+        "contact_label": "Contact us",
+        "mobile_note": "No monthly fee",
+        "pairing_note": "Mix sizes and colors in your pack.",
+        "mix_note": "Mix any sizes and colors — your discount applies automatically.",
+        "size_help_link": "Not sure which size? Measure in 10 seconds →",
+        "reversible_note": "Every band is reversible — a solid side and a patterned side, so each color is really two.",
+        "preorder_label": "Preorder",
+        "preorder_note": "expected to ship in 3–4 weeks",
+        "preorder_copy": "This band is on the way. Order now and it is expected to ship in 3–4 weeks. If your pack mixes preorder and in-stock bands, the whole order ships together when all bands are ready. Need it sooner? Choose a size and style marked “Ships now.”",
+        "next_batch_message": "",
+        "demo_video": "shopify://files/videos/Copy of Untitled (TikTok Video) (1).mp4",
+        "angle": "daily-habit",
+        "eyebrow": "Make time in the Word easier to remember",
+        "headline": "Keep forgetting",
+        "headline_accent": "your Bible time?",
+        "intro": "A reminder on your wrist. Daily Scripture, devotion, and prayer—one phone tap away.",
+        "hero_quote": "Love it keeps me on. Track to have some devotion time in the morning",
+        "hero_author": "Marilyn Daggett",
+        "hero_image": "shopify://shop_images/Khaki_4.jpg",
+        "image_label": "A reminder you can wear",
+        "image_caption": "Notice it. Tap it. Begin.",
+        "proof_heading": "Why they wear it.",
+        "offer_heading": "Start a simple daily habit."
+      },
+      "blocks": {
+        "review1": {
+          "type": "review",
+          "settings": {
+            "author": "Logan Hutchins",
+            "before": "The bracelet is ",
+            "highlight": "super comfortable and easy to use!",
+            "after": ""
+          }
+        },
+        "included0": {
+          "type": "included",
+          "settings": {
+            "text": "Daily Scripture"
+          }
+        },
+        "included1": {
+          "type": "included",
+          "settings": {
+            "text": "Pastor-written devotion + prayer"
+          }
+        },
+        "included2": {
+          "type": "included",
+          "settings": {
+            "text": "Audio + Bible reading plan"
+          }
+        },
+        "faq0": {
+          "type": "faq",
+          "settings": {
+            "question": "Need an app or subscription?",
+            "answer": "Neither. Tap with an NFC-enabled phone and internet access. Daily content is free."
+          }
+        },
+        "faq1": {
+          "type": "faq",
+          "settings": {
+            "question": "Will it work with my phone?",
+            "answer": "iPhone XS or newer and most NFC-enabled Android phones work. Older iPhones may need the NFC reader. Contact us if unsure."
+          }
+        },
+        "faq2": {
+          "type": "faq",
+          "settings": {
+            "question": "What size—and when will it arrive?",
+            "answer": "Measure your wrist; use the size guide above. In stock: typically 5–10 U.S. business days. Preorder estimates appear by your selection; mixed orders ship together."
+          }
+        }
+      },
+      "block_order": [
+        "review1",
+        "included0",
+        "included1",
+        "included2",
+        "faq0",
+        "faq1",
+        "faq2"
+      ]
+    }
+  },
+  "order": [
+    "landing"
+  ]
+}

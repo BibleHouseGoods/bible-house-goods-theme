@@ -1,0 +1,105 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-product",
+      "settings": {
+        "show_bible_band_sections": true,
+        "mix_note": "Mix any sizes and colors — your discount applies automatically.",
+        "preorder_label": "Preorder",
+        "preorder_note": "expected to ship in 3–4 weeks",
+        "preorder_copy": "This band is on the way. Order now and it is expected to ship in 3–4 weeks. If your pack mixes preorder and in-stock bands, the whole order ships together when all bands are ready. Need it sooner? Choose a size and style marked “Ships now.”",
+        "fit_kids": "Fits most wrists about 5.5–6.5 in",
+        "fit_adult": "Fits most wrists about 6.5–7.5 in",
+        "fit_adult_xl": "Fits most wrists about 7.5–8.5 in",
+        "size_help_link": "Not sure which size? Measure in 10 seconds →",
+        "size_help_copy": "Most adults should choose Adult. Choose Adult XL if standard watch bands usually feel tight or you regularly need extended-length bands. If you’re between sizes, size up. For the best fit, wrap a strip of paper snugly around your wrist, mark where it overlaps, then lay it flat against a ruler.",
+        "reversible_note": "Every band is reversible — a solid side and a patterned side, so each color is really two.",
+        "show_gift_block": true,
+        "gift_heading": "Buying this as a gift?",
+        "gift_copy": "The Bible Band is a favorite for baptisms, graduations, confirmations, and new believers. There is nothing to set up and no app to download — they just tap and go. You can add a free gift note in your cart.",
+        "problem_heading": "Keep forgetting your time with God?",
+        "problem_copy": "Quiet time is easy to plan—and easy to forget. The Bible Band keeps a simple reminder on your wrist: notice it, tap it, and today’s Scripture, devotion, and prayer are ready.",
+        "show_demo_video": true,
+        "demo_video": "shopify:\/\/files\/videos\/Copy of Untitled (TikTok Video) (1).mp4",
+        "review_quote_1": "Love this product and the camo design! It’s such an easy way to stay consistent with Scripture reading and devotion.",
+        "review_author_1": "Bible Band customer",
+        "review_quote_2": "This is the easiest way to get daily encouragement through the Word of God!",
+        "review_author_2": "Gina",
+        "review_quote_3": "I got a good devotional, prayer and scripture. I highly recommend it!",
+        "review_author_3": "Arlene",
+        "mark_testimonial_image": "shopify:\/\/shop_images\/mark-hatley-bible-band-testimonial.jpg",
+        "mark_testimonial_quote": "What can I say about the Bible Band except that, in my opinion, it's about as close to perfect as you can get. … With one tap using your smartphone, you're taken directly to Scripture, a daily devotional, and prayer. It only takes a few minutes each day, but the time you invest can have a lasting impact. … It has genuinely enriched my daily Bible reading, prayer time, and personal walk with the Lord.",
+        "mark_testimonial_name": "Mark Hatley",
+        "mark_testimonial_location": "Bernice, LA",
+        "sample_kicker": "See What One Tap Opens",
+        "sample_heading": "A Real Daily Devotion",
+        "sample_intro": "Watch a real sample day from TheBibleBand.com move from Scripture into a short devotion and guided prayer.",
+        "enable_social_share": true
+      }
+    },
+    "product_faq": {
+      "type": "product-faq",
+      "settings": {
+        "show_faq": true,
+        "kicker": "Questions? We've got answers.",
+        "heading": "Everything You Might Be Wondering",
+        "footer_text": "Still have a question?"
+      }
+    },
+    "17866495369943d664": {
+      "type": "_blocks",
+      "blocks": {
+        "ai_gen_block_07974df_9QNDDH": {
+          "type": "ai_gen_block_07974df",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/free-romans-study-guide-signup.png",
+            "heading": "FREE ROMANS STUDY GUIDE",
+            "body": "<p>Get the complete chapter-by-chapter guide—verse walkthroughs, historical context, reflection questions, prayer prompts, and space for notes.<\/p>",
+            "button_label": "Send me the guide",
+            "success_message": "Check your inbox—the guide is on its way.",
+            "consent_note": "By signing up, you agree to receive email from Bible House Goods. Unsubscribe anytime.",
+            "desktop_width_percent": 100,
+            "border_width": 4,
+            "shadow_offset": 10,
+            "background_color": "#EAE0D5",
+            "border_color": "#0A0908",
+            "shadow_color": "#E3A72B",
+            "heading_color": "#0A0908",
+            "text_color": "#0A0908",
+            "muted_text_color": "#5E503F",
+            "input_background": "#FFFDF9",
+            "button_color": "#0A0908",
+            "button_hover_color": "#5E503F",
+            "button_text_color": "#FFFFFF",
+            "focus_color": "#C1440E",
+            "image_placeholder_color": "#C6AC8F",
+            "success_color": "#245B36",
+            "error_color": "#9B2C20",
+            "heading_font": "serif",
+            "body_font": "system_ui_n4",
+            "body_font_size": 16
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "ai_gen_block_07974df_9QNDDH"
+      ],
+      "settings": {}
+    }
+  },
+  "order": [
+    "main",
+    "product_faq",
+    "17866495369943d664"
+  ]
+}

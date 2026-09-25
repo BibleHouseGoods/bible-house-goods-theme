@@ -1,88 +1,102 @@
-/*
- * ------------------------------------------------------------
- * IMPORTANT: The contents of this file are auto-generated.
- *
- * This file may be updated by the Shopify admin theme editor
- * or related systems. Please exercise caution as any changes
- * made to this file may be overwritten.
- * ------------------------------------------------------------
- */
 {
-  "sections": {
-    "main": {
-      "type": "main-product",
-      "settings": {
-        "show_bible_band_sections": true,
-        "problem_heading": "Keep forgetting your time with God?",
-        "problem_copy": "Quiet time is easy to plan—and easy to forget. The Bible Band keeps a simple reminder on your wrist: notice it, tap it, and today’s Scripture, devotion, and prayer are ready.",
-        "low_stock_threshold": 5,
-        "in_stock_message": "In stock — ships in 1–2 business days.",
-        "preorder_message": "Preorder — expected to ship in 3–4 weeks.",
-        "show_demo_video": true,
-        "demo_video": "shopify://files/videos/Copy of Untitled (TikTok Video) (1).mp4",
-        "review_quote_1": "Love this product and the camo design! It’s such an easy way to stay consistent with Scripture reading and devotion.",
-        "review_author_1": "Bible Band customer",
-        "review_quote_2": "This is the easiest way to get daily encouragement through the Word of God!",
-        "review_author_2": "Gina",
-        "review_quote_3": "I got a good devotional, prayer and scripture. I highly recommend it!",
-        "review_author_3": "Arlene",
-        "mark_testimonial_image": "shopify://shop_images/mark-hatley-bible-band-testimonial.jpg",
-        "mark_testimonial_quote": "What can I say about the Bible Band except that, in my opinion, it's about as close to perfect as you can get. … With one tap using your smartphone, you're taken directly to Scripture, a daily devotional, and prayer. It only takes a few minutes each day, but the time you invest can have a lasting impact. … It has genuinely enriched my daily Bible reading, prayer time, and personal walk with the Lord.",
-        "mark_testimonial_name": "Mark Hatley",
-        "mark_testimonial_location": "Bernice, LA",
-        "sample_kicker": "See What One Tap Opens",
-        "sample_heading": "A Real Daily Devotion",
-        "sample_intro": "Watch a real sample day from TheBibleBand.com move from Scripture into a short devotion and guided prayer.",
-        "enable_social_share": true
-      }
-    },
-    "17851870240ddcdab2": {
-      "type": "apps",
-      "blocks": {
-        "klaviyo_reviews_product_reviews_jRdWcf": {
-          "type": "shopify://apps/klaviyo-reviews/blocks/product-reviews/db20e365-d984-4ac4-9655-e1588d951ca9",
-          "settings": {}
-        }
-      },
-      "block_order": [
-        "klaviyo_reviews_product_reviews_jRdWcf"
-      ],
-      "settings": {}
-    },
-    "1785187044565dbc50": {
-      "type": "apps",
-      "settings": {}
-    },
-    "178518705968e94397": {
-      "type": "apps",
-      "blocks": {
-        "klaviyo_reviews_average_rating_enDhy7": {
-          "type": "shopify://apps/klaviyo-reviews/blocks/average-rating/db20e365-d984-4ac4-9655-e1588d951ca9",
-          "settings": {
-            "product": "{{product}}"
-          }
-        }
-      },
-      "block_order": [
-        "klaviyo_reviews_average_rating_enDhy7"
-      ],
-      "settings": {}
-    },
-    "1785187096a4263205": {
-      "type": "apps",
-      "settings": {}
-    },
-    "1785187097e6144838": {
-      "type": "apps",
-      "settings": {}
-    }
-  },
   "order": [
     "main",
-    "17851870240ddcdab2",
-    "1785187044565dbc50",
-    "178518705968e94397",
-    "1785187096a4263205",
-    "1785187097e6144838"
-  ]
+    "product_faq",
+    "17866495369943d664"
+  ],
+  "sections": {
+    "17866495369943d664": {
+      "block_order": [
+        "ai_gen_block_07974df_9QNDDH"
+      ],
+      "blocks": {
+        "ai_gen_block_07974df_9QNDDH": {
+          "blocks": {},
+          "settings": {
+            "background_color": "#eae0d5",
+            "body": "<p>Get the complete chapter-by-chapter guide—verse walkthroughs, historical context, reflection questions, prayer prompts, and space for notes.</p>",
+            "body_font": "system_ui_n4",
+            "body_font_size": 16,
+            "border_color": "#0a0908",
+            "border_width": 4,
+            "button_color": "#0a0908",
+            "button_hover_color": "#5e503f",
+            "button_label": "Send me the guide",
+            "button_text_color": "#ffffff",
+            "consent_note": "By signing up, you agree to receive email from Bible House Goods. Unsubscribe anytime.",
+            "desktop_width_percent": 100,
+            "error_color": "#9b2c20",
+            "focus_color": "#c1440e",
+            "heading": "FREE ROMANS STUDY GUIDE",
+            "heading_color": "#0a0908",
+            "heading_font": "serif",
+            "image": "shopify://shop_images/free-romans-study-guide-signup.png",
+            "image_placeholder_color": "#c6ac8f",
+            "input_background": "#fffdf9",
+            "muted_text_color": "#5e503f",
+            "shadow_color": "#e3a72b",
+            "shadow_offset": 10,
+            "success_color": "#245b36",
+            "success_message": "Check your inbox—the guide is on its way.",
+            "text_color": "#0a0908"
+          },
+          "type": "ai_gen_block_07974df"
+        }
+      },
+      "settings": {},
+      "type": "_blocks"
+    },
+    "main": {
+      "settings": {
+        "delivery_processing_max": 2,
+        "delivery_processing_min": 1,
+        "delivery_shipping_max": 8,
+        "delivery_shipping_min": 4,
+        "demo_video": "shopify://files/videos/Copy of Untitled (TikTok Video) (1).mp4",
+        "enable_social_share": true,
+        "fit_adult": "Fits most wrists about 6.5–7.5 in",
+        "fit_adult_xl": "Fits most wrists about 7.5–8.5 in",
+        "fit_kids": "Fits most wrists about 5.5–6.5 in",
+        "gift_copy": "The Bible Band is a favorite for baptisms, graduations, confirmations, and new believers. There is nothing to set up and no app to download — they just tap and go. You can add a free gift note in your cart.",
+        "gift_heading": "Buying this as a gift?",
+        "mark_testimonial_image": "shopify://shop_images/mark-hatley-bible-band-testimonial.jpg",
+        "mark_testimonial_location": "Bernice, LA",
+        "mark_testimonial_name": "Mark Hatley",
+        "mark_testimonial_quote": "What can I say about the Bible Band except that, in my opinion, it's about as close to perfect as you can get. … With one tap using your smartphone, you're taken directly to Scripture, a daily devotional, and prayer. It only takes a few minutes each day, but the time you invest can have a lasting impact. … It has genuinely enriched my daily Bible reading, prayer time, and personal walk with the Lord.",
+        "mix_note": "Mix any sizes and colors — your discount applies automatically.",
+        "next_batch_message": "",
+        "preorder_copy": "This band is on the way. Order now and it is expected to ship in 3–4 weeks. If your pack mixes preorder and in-stock bands, the whole order ships together when all bands are ready. Need it sooner? Choose a size and style marked “Ships now.”",
+        "preorder_label": "Preorder",
+        "preorder_note": "expected to ship in 3–4 weeks",
+        "problem_copy": "Quiet time is easy to plan—and easy to forget. The Bible Band keeps a simple reminder on your wrist: notice it, tap it, and today’s Scripture, devotion, and prayer are ready.",
+        "problem_heading": "Keep forgetting your time with God?",
+        "reversible_note": "Every band is reversible — a solid side and a patterned side, so each color is really two.",
+        "review_author_1": "Bible Band customer",
+        "review_author_2": "Gina",
+        "review_author_3": "Arlene",
+        "review_quote_1": "Love this product and the camo design! It’s such an easy way to stay consistent with Scripture reading and devotion.",
+        "review_quote_2": "This is the easiest way to get daily encouragement through the Word of God!",
+        "review_quote_3": "I got a good devotional, prayer and scripture. I highly recommend it!",
+        "sample_heading": "A Real Daily Devotion",
+        "sample_intro": "Watch a real sample day from TheBibleBand.com move from Scripture into a short devotion and guided prayer.",
+        "sample_kicker": "See What One Tap Opens",
+        "show_bible_band_sections": true,
+        "show_delivery_date": true,
+        "show_demo_video": true,
+        "show_gift_block": true,
+        "size_help_copy": "Most adults should choose Adult. Choose Adult XL if standard watch bands usually feel tight or you regularly need extended-length bands. If you’re between sizes, size up. For the best fit, wrap a strip of paper snugly around your wrist, mark where it overlaps, then lay it flat against a ruler.",
+        "size_help_link": "Not sure which size? Measure in 10 seconds →"
+      },
+      "type": "main-product"
+    },
+    "product_faq": {
+      "settings": {
+        "footer_text": "Still have a question?",
+        "heading": "Everything You Might Be Wondering",
+        "kicker": "Questions? We've got answers.",
+        "show_faq": true
+      },
+      "type": "product-faq"
+    }
+  }
 }

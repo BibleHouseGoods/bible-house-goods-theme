@@ -1,0 +1,141 @@
+<!doctype html>
+<html class="no-js bb-landing-page" lang="{{ request.locale.iso_code }}">
+  <head>
+    <meta name="google-site-verification" content="1LOWbiP6EQQ027ZKyS9XvjTCfAyyAGw-g1raFZzsvPE">
+    <meta charset="utf-8">
+    {% render 'copyright-meta' %}
+    {%- if request.page_type == 'index' and request.design_mode == false -%}
+      <script>window.location.replace('/products/the-bible-band');</script>
+      <noscript><meta http-equiv="refresh" content="0;url=/products/the-bible-band"></noscript>
+    {%- endif -%}
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="{{ settings.deep_black }}">
+    <link rel="canonical" href="{% if request.page_type == 'index' %}{{ shop.url }}/products/the-bible-band{% else %}{{ canonical_url }}{% endif %}">
+    {%- if settings.favicon != blank -%}
+      <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
+    {%- endif -%}
+    {% liquid
+      case template.suffix
+        when 'bb-daily-habit'
+          assign page_title = 'A daily Scripture habit | The Bible Band'
+          assign page_description = 'Keep meaning to read your Bible, but forgetting? A wearable reminder and a simple way to open daily Scripture, devotion, and prayer.'
+        when 'bb-daily-encouragement'
+          assign page_title = 'Daily encouragement in the Word | The Bible Band'
+          assign page_description = 'A pause in a busy day. Open Scripture, a pastor-written devotion, and guided prayer with The Bible Band.'
+        when 'bb-faith-conversations'
+          assign page_title = 'A wearable opening for faith conversations | The Bible Band'
+          assign page_description = 'Wear a daily reminder you can also share. Show a curious friend what one tap opens: Scripture, devotion, and prayer.'
+        when 'bb-meaningful-gift'
+          assign page_title = 'A meaningful Scripture-centered gift | The Bible Band'
+          assign page_description = 'Give a reminder of God’s Word they can wear. Choose a reversible Bible Band in their size and color, with no app or subscription.'
+      endcase
+    %}
+    {% render 'seo-meta' %}
+    <style>
+      .bb-landing-page [role="dialog"]:has(form.klaviyo-form) { display: none !important; }
+      .bb-landing-page body.klaviyo-prevent-body-scrolling { overflow: auto !important; }
+    </style>
+    {{ content_for_header }}
+    {%- liquid
+      assign heading_font_bold = settings.heading_font | font_modify: 'weight', 'bolder'
+      assign body_font_bold = settings.body_font | font_modify: 'weight', 'bolder'
+    -%}
+    <style>
+      {{ settings.heading_font | font_face: font_display: 'swap' }}
+      {% if heading_font_bold %}{{ heading_font_bold | font_face: font_display: 'swap' }}{% endif %}
+      {{ settings.body_font | font_face: font_display: 'swap' }}
+      {% if body_font_bold %}{{ body_font_bold | font_face: font_display: 'swap' }}{% endif %}
+    </style>
+    {{ 'base.css' | asset_url | stylesheet_tag }}
+    {{ 'gallery-landscape.css' | asset_url | stylesheet_tag }}
+    <script src="{{ 'theme.js' | asset_url }}" defer></script>
+    <style>
+      :root {
+        --ink: #000000;
+        --cream: {{ settings.cream }};
+        --tan: {{ settings.tan }};
+        --brown: {{ settings.brown }};
+        --rust: {{ settings.rust }};
+        --gold: {{ settings.gold }};
+        --font-heading: Arial, Helvetica, sans-serif;
+        --font-heading-style: normal;
+        --font-heading-weight: {{ settings.heading_font.weight }};
+        --font-body: Arial, Helvetica, sans-serif;
+        --font-body-style: normal;
+        --font-body-weight: {{ settings.body_font.weight }};
+        --font-body-size: {{ settings.body_font_size }}px;
+      }
+
+      /* ---------------------------------------------------------------
+         CONVERSION FIX 1 — sans-serif body text.
+         base.css sets `body{font-family:var(--font-body)}` and then, on the
+         very next line, `body,input,button,select,textarea{font:inherit}`.
+         The `font` shorthand resets font-family, so <body> inherited from
+         <html>, which has no font set -> browser default Times (serif).
+         Restoring the intended body font here.
+         --------------------------------------------------------------- */
+      body {
+        font-family: var(--font-body);
+        font-style: var(--font-body-style);
+        font-weight: var(--font-body-weight);
+        font-size: var(--font-body-size);
+      }
+
+      /* ---------------------------------------------------------------
+         CONVERSION FIX 2 — mobile product page stacking order.
+         base.css contains a malformed fragment (`100%}`) from a truncated
+         media query. It swallowed the rules below, so the gallery / buy
+         panel / details / reviews were stacking in raw DOM order on mobile.
+         Verified missing at runtime before restoring.
+         --------------------------------------------------------------- */
+      @media (max-width: 1000px) {
+        .product-gallery-wrap { order: 1; }
+        .product-info { order: 2; }
+        .product-details { order: 3; }
+        .featured-reviews--column { order: 4; }
+      }
+
+      /* ---------------------------------------------------------------
+         CONVERSION FIX 3 — primary buy button.
+         Was .button (near-black on cream), which read as a notification
+         banner rather than a control — especially with a full sentence as
+         its label. Gold matches the mobile sticky purchase bar and
+         separates it from the purple Shop Pay button directly below.
+         --------------------------------------------------------------- */
+      .product-form [data-primary-product-submit] {
+        border-color: var(--gold);
+        background: var(--gold);
+        color: var(--ink);
+      }
+      .product-form [data-primary-product-submit]:hover:not(:disabled) {
+        border-color: var(--ink);
+        background: var(--ink);
+        color: var(--gold);
+      }
+      .product-form [data-primary-product-submit]:disabled {
+        border-color: var(--tan);
+        background: var(--tan);
+        color: var(--brown);
+        cursor: not-allowed;
+      }
+
+      /* ---------------------------------------------------------------
+         CONVERSION FIX 4 — gift upsell moved below the buy button.
+         The $6 gift-ready add-on sat between the size guide and the buy
+         button, pushing the primary action further down the mobile scroll.
+         .product-form is a grid, so its children can be reordered with
+         `order` — no markup change, nothing to break.
+         Result: button -> Shop Pay -> payment icons -> gift add-on.
+         --------------------------------------------------------------- */
+      .product-form .product-gift-ready { order: 1; }
+      .product-form .purchase-reassurance { order: 2; }
+      .product-form .product-impact { order: 3; }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#MainContent">Skip to content</a>
+    
+    <main id="MainContent" tabindex="-1">{{ content_for_layout }}</main>
+    
+  </body>
+</html>

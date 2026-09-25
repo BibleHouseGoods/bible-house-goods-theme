@@ -109,20 +109,16 @@
     {% if product.featured_media.preview_image != blank %}"image": [{{ product.featured_media.preview_image | image_url: width: 1200 | prepend: "https:" | json }}],{% endif %}
     {% if product.vendor != blank %}"brand": {"@type": "Brand", "name": {{ product.vendor | json }}},{% endif %}
     {% if product.selected_or_first_available_variant.sku != blank %}"sku": {{ product.selected_or_first_available_variant.sku | json }},{% endif %}
+    {%- comment -%} One Product block with price AND rating, from Judge.me's standard review metafields. {%- endcomment -%}
+    {% if product.metafields.reviews.rating_count.value > 0 and product.metafields.reviews.rating.value != blank %}"aggregateRating": {"@type": "AggregateRating", "ratingValue": {{ product.metafields.reviews.rating.value.rating | json }}, "reviewCount": {{ product.metafields.reviews.rating_count.value | json }}, "bestRating": {{ product.metafields.reviews.rating.value.scale_max | json }}, "worstRating": {{ product.metafields.reviews.rating.value.scale_min | json }}},{% endif %}
     "offers": [
       {% for variant in product.variants %}
-        {% assign offer_availability = 'InStock' %}
-        {% if variant.inventory_management and variant.inventory_quantity <= 0 and variant.inventory_policy == 'continue' %}
-          {% assign offer_availability = 'BackOrder' %}
-        {% elsif variant.available == false %}
-          {% assign offer_availability = 'OutOfStock' %}
-        {% endif %}
         {
           "@type": "Offer",
           "url": {{ shop.url | append: variant.url | json }},
           "priceCurrency": {{ cart.currency.iso_code | json }},
           "price": {{ variant.price | divided_by: 100.0 | json }},
-          "availability": "https://schema.org/{{ offer_availability }}",
+          "availability": "https://schema.org/{% if variant.available %}InStock{% else %}OutOfStock{% endif %}",
           "itemCondition": "https://schema.org/NewCondition"{% if variant.sku != blank %},
           "sku": {{ variant.sku | json }}{% endif %}
         }{% unless forloop.last %},{% endunless %}

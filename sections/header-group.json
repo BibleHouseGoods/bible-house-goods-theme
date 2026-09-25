@@ -17,11 +17,14 @@
         "impact_kicker": "We give back to advance the kingdom",
         "impact_heading": "Your Purchase Supports Ministry",
         "impact_copy": "At least 10% of profits supports local church ministry and missions.",
-        "show": true,
-        "text_1": "Bible Band preorders are open — incoming inventory expected in about 4 weeks. Shop colors & sizes →",
-        "announcement_link": "shopify://products/the-bible-band",
-        "text_2": "Free shipping on all Bible Band™ orders",
-        "text_3": "Keep God's Word Close",
+        "show_help": false,
+        "help_label": "Need help?",
+        "help_sub": "How to use your Bible Band",
+        "help_link": "",
+        "show": false,
+        "text_1": "Free shipping on all Bible Band™ orders",
+        "text_2": "Keep God's Word Close",
+        "text_3": "Scripture · Prayer · Devotion",
         "text_4": "“Fix these words of mine in your hearts and minds; tie them as symbols on your hands.” — Deuteronomy 11:18"
       }
     },
@@ -30,10 +33,29 @@
       "settings": {
         "menu": "main-menu"
       }
+    },
+    "1786134904d1564ce6": {
+      "type": "apps",
+      "blocks": {
+        "judge_me_reviews_trust_badge_KxXYRb": {
+          "type": "shopify://apps/judge-me-reviews/blocks/trust_badge/61ccd3b1-a9f2-4160-9fe9-4fec8413e5d8",
+          "settings": {
+            "structure": "default",
+            "color": "default",
+            "star": "default",
+            "alignment": "center"
+          }
+        }
+      },
+      "block_order": [
+        "judge_me_reviews_trust_badge_KxXYRb"
+      ],
+      "settings": {}
     }
   },
   "order": [
     "announcement",
-    "header"
+    "header",
+    "1786134904d1564ce6"
   ]
 }
