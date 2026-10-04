@@ -27,3 +27,19 @@ export const STATUS_LABELS: Record<string, string> = {
   private: 'Private — stored only',
   error: 'Needs attention',
 };
+
+export function todayLabel(timeZone: string): string {
+  return new Date().toLocaleDateString('en-US', { timeZone, weekday: 'long', month: 'long', day: 'numeric' });
+}
+
+export function greeting(timeZone: string): string {
+  const h = Number(new Intl.DateTimeFormat('en-US', { timeZone, hour: 'numeric', hourCycle: 'h23' }).format(new Date()));
+  return h < 5 ? 'Still up' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+}
+
+/** "Chicago · CDT" */
+export function timeZoneLabel(timeZone: string): string {
+  const city = timeZone.split('/').pop()?.replace(/_/g, ' ') ?? timeZone;
+  const abbr = new Intl.DateTimeFormat('en-US', { timeZone, timeZoneName: 'short' }).formatToParts(new Date()).find((p) => p.type === 'timeZoneName')?.value;
+  return abbr ? `${city} · ${abbr}` : city;
+}

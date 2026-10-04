@@ -89,7 +89,7 @@ npm run lint                 # typecheck
 ## Limits & notes
 - Files ≤ 24 MB in a supported format go to OpenAI unchanged. Larger files are converted on the server (ffmpeg) to 16 kHz mono 10-minute parts for transcription only; the original in Drive is never modified. The limit is about 450 MB per file (Vercel's temp storage); export very long WAVs as M4A/MP3.
 - If a long recording runs out of function time, the next visit to the inbox resumes it from the last finished step.
-- Calendar events use `APP_TIMEZONE`. Relative dates ("next Tuesday") are resolved from the recording time, not the approval time.
+- Calendar events, due dates and all displayed times use `APP_TIMEZONE` (default `America/Chicago`). Relative dates ("next Tuesday") are resolved from the recording time, not the approval time.
 - Email drafts go to Gmail Drafts. Other providers can be added in `lib/google/gmail.ts`'s shape.
 
 See [SECURITY.md](./SECURITY.md) and [ROADMAP.md](./ROADMAP.md).

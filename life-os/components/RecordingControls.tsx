@@ -2,6 +2,9 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { AREA_LABELS, AREAS } from '@/lib/taxonomy';
+import { AreaDot } from './Badges';
+import Icon from './Icon';
+import { Chip } from './ui';
 
 interface Props {
   id: string;
@@ -35,9 +38,7 @@ export default function RecordingControls(p: Props) {
 
   async function allowAi() {
     if (!confirm('Allow AI processing? The audio will be sent to OpenAI for transcription, cleaning and classification.')) return;
-    if (await patch('ai', { isPrivate: false })) {
-      await req('process', `/api/recordings/${p.id}/process`, { method: 'POST' });
-    }
+    if (await patch('ai', { isPrivate: false })) await req('process', `/api/recordings/${p.id}/process`, { method: 'POST' });
     router.refresh();
   }
 
@@ -56,7 +57,7 @@ export default function RecordingControls(p: Props) {
   }
 
   async function remove() {
-    if (!confirm('Delete this recording? Its Drive folder (audio + transcripts) moves to Drive trash and all items are removed from Life OS. Items already sent to Todoist/Calendar/Gmail stay there.')) return;
+    if (!confirm('Delete this recording? Its Drive folder (audio and transcripts) moves to Drive trash and its items are removed from Life OS. Anything already sent to Todoist, Calendar or Gmail stays there.')) return;
     if (await req('delete', `/api/recordings/${p.id}`, { method: 'DELETE' })) {
       router.push('/');
       router.refresh();
@@ -65,41 +66,71 @@ export default function RecordingControls(p: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="card space-y-3">
+      <section className="card space-y-5">
+        <h2 className="eyebrow">Details</h2>
         <div>
           <label className="label" htmlFor="rt">Title</label>
-          <input id="rt" className="field" value={title} onChange={(e) => setTitle(e.target.value)} onBlur={() => title !== (p.title ?? '') && patch('title', { title: title || null }).then(() => router.refresh())} />
+          <input
+            id="rt"
+            className="field"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={() => title !== (p.title ?? '') && patch('title', { title: title || null }).then(() => router.refresh())}
+          />
         </div>
         <div>
-          <label className="label" htmlFor="ra">Area</label>
-          <select id="ra" className="field" value={area} onChange={(e) => { setArea(e.target.value); patch('area', { area: e.target.value || null }).then(() => router.refresh()); }}>
-            <option value="">None</option>
-            {AREAS.map((a) => <option key={a} value={a}>{AREA_LABELS[a]}</option>)}
-          </select>
+          <span className="label">Area</span>
+          <div className="flex flex-wrap gap-2">
+            <Chip active={area === ''} onClick={() => { setArea(''); patch('area', { area: null }).then(() => router.refresh()); }}>None</Chip>
+            {AREAS.map((a) => (
+              <Chip key={a} active={area === a} onClick={() => { setArea(a); patch('area', { area: a }).then(() => router.refresh()); }}>
+                <AreaDot area={a} />
+                {AREA_LABELS[a]}
+              </Chip>
+            ))}
+          </div>
         </div>
         <div>
           <label className="label" htmlFor="rn">Your notes</label>
-          <textarea id="rn" className="field min-h-24" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={p.isPrivate ? 'Private recordings are never transcribed. Jot what it was about so you can find it.' : 'Optional'} />
+          <textarea
+            id="rn"
+            className="field min-h-28 leading-relaxed"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder={p.isPrivate ? 'Private recordings are never transcribed. Jot what it was about so you can find it later.' : 'Optional'}
+          />
           {notes !== (p.notes ?? '') && (
-            <button className="btn-secondary mt-2" disabled={busy !== null} onClick={() => patch('notes', { notes: notes || null }).then(() => router.refresh())}>
+            <button className="btn-secondary mt-3 min-h-10" disabled={busy !== null} onClick={() => patch('notes', { notes: notes || null }).then(() => router.refresh())}>
               {busy === 'notes' ? 'Saving…' : 'Save notes'}
             </button>
           )}
         </div>
-      </div>
+      </section>
 
       <div className="flex flex-wrap gap-2">
         {(p.status === 'error' || p.status === 'uploaded') && !p.isPrivate && (
-          <button className="btn-primary" disabled={busy !== null} onClick={retry}>{busy === 'process' ? 'Processing…' : 'Retry processing'}</button>
+          <button className="btn-primary" disabled={busy !== null} onClick={retry}>
+            <Icon name="retry" className="h-[18px] w-[18px]" />
+            {busy === 'process' ? 'Processing…' : 'Retry processing'}
+          </button>
         )}
         {p.isPrivate ? (
-          <button className="btn-secondary" disabled={busy !== null} onClick={allowAi}>{busy ? 'Working…' : 'Allow AI processing'}</button>
+          <button className="btn-secondary" disabled={busy !== null} onClick={allowAi}>
+            <Icon name="sparkle" className="h-[18px] w-[18px]" />
+            {busy ? 'Working…' : 'Allow AI processing'}
+          </button>
         ) : (
-          <button className="btn-secondary" disabled={busy !== null} onClick={makePrivate}>Mark private</button>
+          <button className="btn-secondary" disabled={busy !== null} onClick={makePrivate}>
+            <Icon name="lock" className="h-[18px] w-[18px]" />
+            Mark private
+          </button>
         )}
-        <button className="btn-danger" disabled={busy !== null} onClick={remove}>{busy === 'delete' ? 'Deleting…' : 'Delete'}</button>
+        <button className="btn-ghost ml-auto text-danger" disabled={busy !== null} onClick={remove}>
+          <Icon name="trash" className="h-[18px] w-[18px]" />
+          {busy === 'delete' ? 'Deleting…' : 'Delete'}
+        </button>
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-[13px] text-danger">{error}</p>}
     </div>
   );
 }

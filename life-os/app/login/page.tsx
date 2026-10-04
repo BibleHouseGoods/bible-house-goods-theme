@@ -23,14 +23,22 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6">
-      <h1 className="mb-1 text-3xl font-bold tracking-tight">Life OS</h1>
-      <p className="mb-8 text-stone-500">Private. Single user.</p>
+    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6 pb-[env(safe-area-inset-bottom)]">
+      <div className="mb-10 flex items-end gap-[5px]" aria-hidden>
+        {[10, 22, 36, 20, 8].map((h, i) => (
+          <span key={i} className={`w-[5px] rounded-full ${i === 4 ? 'bg-bible-house' : 'bg-ink'}`} style={{ height: h }} />
+        ))}
+      </div>
+      <h1 className="display text-[44px] leading-none font-medium">Life OS</h1>
+      <p className="mt-3 mb-10 text-[16px] leading-relaxed text-ink-2">Say it once. It's kept exactly as you said it, and nothing moves until you approve.</p>
       <form onSubmit={submit} className="space-y-3">
-        <input className="field" type="password" autoComplete="current-password" placeholder="Passphrase" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus />
-        <button className="btn-primary w-full" disabled={busy || !password}>{busy ? 'Checking…' : 'Unlock'}</button>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        <input className="field py-3.5" type="password" autoComplete="current-password" placeholder="Passphrase" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus aria-label="Passphrase" />
+        <button className="btn-primary w-full" disabled={busy || !password}>
+          {busy ? 'Unlocking…' : 'Unlock'}
+        </button>
+        {error && <p className="pt-1 text-center text-[14px] text-danger">{error}</p>}
       </form>
+      <p className="mt-16 text-center text-[12px] text-muted">Private · Single user</p>
     </main>
   );
 }

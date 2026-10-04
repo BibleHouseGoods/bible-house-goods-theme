@@ -1,74 +1,104 @@
 import PageHeader from '@/components/PageHeader';
-import { formatWhen } from '@/components/format';
+import { formatWhen, timeZoneLabel } from '@/components/format';
+import Icon from '@/components/Icon';
 import { DisconnectGoogle, LogoutButton } from '@/components/SettingsActions';
+import { Row } from '@/components/ui';
 import { env, envStatus } from '@/lib/env';
 import { getIntegration } from '@/lib/google/auth';
 import { recentAudit } from '@/lib/queries';
 import { requireOwner } from '@/lib/session';
 
+const OPTIONAL = new Set(['APP_TIMEZONE', 'OPENAI_TRANSCRIBE_MODEL', 'OPENAI_TEXT_MODEL', 'OPENAI_REASONING_EFFORT', 'GOOGLE_ALLOWED_EMAIL', 'GOOGLE_CALENDAR_ID', 'GOOGLE_DRIVE_ROOT_NAME']);
+
+function Status({ ok, children }: { ok: boolean; children: React.ReactNode }) {
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-[12px] font-semibold ${ok ? 'text-success' : 'text-muted'}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${ok ? 'bg-success' : 'bg-line-strong'}`} />
+      {children}
+    </span>
+  );
+}
+
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ google?: string }> }) {
   const ownerId = await requireOwner();
   const { google: googleMsg } = await searchParams;
   const status = envStatus();
-  const missing = Object.entries(status).filter(([k, ok]) => !ok && !k.startsWith('TODOIST_PROJECT') && !['APP_TIMEZONE', 'OPENAI_TRANSCRIBE_MODEL', 'OPENAI_TEXT_MODEL', 'OPENAI_REASONING_EFFORT', 'GOOGLE_ALLOWED_EMAIL', 'GOOGLE_CALENDAR_ID', 'GOOGLE_DRIVE_ROOT_NAME'].includes(k));
+  const missing = Object.entries(status).filter(([k, ok]) => !ok && !k.startsWith('TODOIST_PROJECT') && !OPTIONAL.has(k));
   let e: ReturnType<typeof env> | null = null;
-  try { e = env(); } catch { /* shown below */ }
+  try {
+    e = env();
+  } catch {
+    /* shown below */
+  }
   const google = e ? await getIntegration(ownerId).catch(() => null) : null;
   const audit = await recentAudit(ownerId).catch(() => []);
+  const areaProjects = (['LIFE', 'CHURCH', 'BIBLE_HOUSE', 'LIBERTY'] as const).filter((a) => status[`TODOIST_PROJECT_${a}`]).length;
 
   return (
     <>
-      <PageHeader title="Settings" />
-      <div className="space-y-4">
+      <PageHeader eyebrow="Life OS" title="Settings" />
+      <div className="space-y-6">
         {missing.length > 0 && (
-          <div className="card border-amber-300 text-sm dark:border-amber-800">
-            <p className="font-semibold">Missing environment variables</p>
-            <p className="mt-1 break-words text-stone-500">{missing.map(([k]) => k).join(', ')}</p>
+          <div className="rounded-[22px] bg-bible-house-soft p-5 text-[14px]">
+            <p className="font-semibold text-bible-house">Finish setup</p>
+            <p className="mt-1 break-words text-ink-2">Missing environment variables: {missing.map(([k]) => k).join(', ')}</p>
           </div>
         )}
 
-        <section className="card">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="font-semibold">Google</p>
-              <p className="text-sm text-stone-500">{google ? `Connected${google.meta.email ? ` as ${google.meta.email}` : ''}` : 'Drive, Calendar and Gmail drafts'}</p>
-            </div>
-            {google ? <DisconnectGoogle /> : <a className="btn-primary" href="/api/google/connect">Connect</a>}
+        <section>
+          <h2 className="eyebrow mb-3 px-1">Connections</h2>
+          <div className="card divide-y divide-line">
+            <Row
+              icon={<Icon name="drive" />}
+              title="Google"
+              description={google ? (google.meta.email ?? 'Connected') : 'Drive, Calendar and Gmail drafts'}
+              control={google ? <DisconnectGoogle /> : <a className="btn-primary min-h-10 px-4 text-[14px]" href="/api/google/connect">Connect</a>}
+            >
+              {googleMsg && (
+                <p className={`rounded-2xl px-4 py-3 text-[13px] ${googleMsg === 'connected' ? 'bg-life-soft text-success' : 'bg-danger/10 text-danger'}`}>
+                  {googleMsg === 'connected' ? 'Google connected.' : googleMsg}
+                </p>
+              )}
+            </Row>
+            <Row
+              icon={<Icon name="task" />}
+              title="Todoist"
+              description={status.TODOIST_API_TOKEN ? `${areaProjects} of 4 areas mapped to projects. Others go to Inbox.` : 'Set TODOIST_API_TOKEN'}
+              control={<Status ok={status.TODOIST_API_TOKEN}>{status.TODOIST_API_TOKEN ? 'Ready' : 'Off'}</Status>}
+            />
           </div>
-          {googleMsg && <p className={`mt-2 text-sm ${googleMsg === 'connected' ? 'text-emerald-700' : 'text-red-600'}`}>{googleMsg === 'connected' ? 'Google connected.' : googleMsg}</p>}
-          <p className="mt-2 text-xs text-stone-500">Scopes: files Life OS creates (not your whole Drive), calendar events, and creating Gmail drafts (never sending).</p>
-        </section>
-
-        <section className="card text-sm">
-          <p className="font-semibold">Todoist</p>
-          <p className="text-stone-500">{status.TODOIST_API_TOKEN ? 'API token configured' : 'Set TODOIST_API_TOKEN'}</p>
-          <p className="mt-1 text-xs text-stone-500">
-            Area projects: {(['LIFE', 'CHURCH', 'BIBLE_HOUSE', 'LIBERTY'] as const).map((a) => `${a.toLowerCase()} ${status[`TODOIST_PROJECT_${a}`] ? '✓' : '→ Inbox'}`).join(' · ')}
-          </p>
+          <p className="mt-2 px-1 text-[12px] leading-relaxed text-muted">Google access is limited to files Life OS creates, calendar events, and creating Gmail drafts. Life OS can't send email.</p>
         </section>
 
         {e && (
-          <section className="card text-sm">
-            <p className="font-semibold">Processing</p>
-            <dl className="mt-1 grid grid-cols-2 gap-y-1 text-stone-500">
-              <dt>Transcription</dt><dd>{e.OPENAI_TRANSCRIBE_MODEL}</dd>
-              <dt>Clean + classify</dt><dd>{e.OPENAI_TEXT_MODEL}</dd>
-              <dt>Time zone</dt><dd>{e.APP_TIMEZONE}</dd>
-            </dl>
+          <section>
+            <h2 className="eyebrow mb-3 px-1">Processing</h2>
+            <div className="card divide-y divide-line py-1 text-[14px]">
+              {[
+                ['Transcription', e.OPENAI_TRANSCRIBE_MODEL],
+                ['Clean and sort', e.OPENAI_TEXT_MODEL],
+                ['Time zone', timeZoneLabel(e.APP_TIMEZONE)],
+              ].map(([k, v]) => (
+                <div key={k} className="flex items-center justify-between py-3">
+                  <span className="text-ink-2">{k}</span>
+                  <span className="font-medium">{v}</span>
+                </div>
+              ))}
+            </div>
           </section>
         )}
 
-        <section className="card text-sm">
-          <p className="font-semibold">Recent activity</p>
-          <ul className="mt-2 space-y-1 text-xs text-stone-500">
+        <section>
+          <h2 className="eyebrow mb-3 px-1">Recent activity</h2>
+          <div className="card divide-y divide-line py-1">
             {audit.map((a, i) => (
-              <li key={i} className="flex justify-between gap-2">
-                <span className="truncate">{a.action}</span>
-                <span className="shrink-0">{formatWhen(a.at, e?.APP_TIMEZONE)}</span>
-              </li>
+              <div key={i} className="flex items-center justify-between gap-3 py-2.5 text-[13px]">
+                <span className="truncate font-mono text-[12px] text-ink-2">{a.action}</span>
+                <span className="shrink-0 text-muted">{formatWhen(a.at, e?.APP_TIMEZONE)}</span>
+              </div>
             ))}
-            {audit.length === 0 && <li>No activity yet.</li>}
-          </ul>
+            {audit.length === 0 && <p className="py-3 text-[13px] text-muted">No activity yet.</p>}
+          </div>
         </section>
 
         <LogoutButton />

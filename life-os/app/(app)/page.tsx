@@ -1,9 +1,12 @@
 import Link from 'next/link';
 import { PrivateBadge } from '@/components/Badges';
-import { formatWhen, STATUS_LABELS } from '@/components/format';
+import EmptyState from '@/components/EmptyState';
+import { formatWhen, greeting, STATUS_LABELS, todayLabel } from '@/components/format';
+import Icon from '@/components/Icon';
 import ItemCard from '@/components/ItemCard';
 import PageHeader from '@/components/PageHeader';
 import ProcessingWatcher from '@/components/ProcessingWatcher';
+import { Stepper } from '@/components/ui';
 import { env } from '@/lib/env';
 import { inProgressRecordings, pendingItems } from '@/lib/queries';
 import { needsKick } from '@/lib/resume';
@@ -31,40 +34,53 @@ export default async function InboxPage() {
 
   return (
     <>
-      <PageHeader title="Inbox" subtitle={items.length ? `${items.length} to review — nothing leaves Life OS until you approve` : 'Nothing to review'} />
+      <PageHeader
+        eyebrow={todayLabel(tz)}
+        title={greeting(tz)}
+        subtitle={
+          items.length ? (
+            <>
+              <span className="font-semibold text-ink">{items.length}</span> {items.length === 1 ? 'item' : 'items'} to review. Nothing leaves Life OS until you approve.
+            </>
+          ) : undefined
+        }
+      />
       <ProcessingWatcher queued={queued} active={active} />
 
       {processing.length > 0 && (
-        <section className="mb-6 space-y-2">
-          {processing.map((r) => (
-            <Link key={r.id} href={`/recordings/${r.id}`} className="card flex items-center justify-between gap-3 py-3">
-              <div className="min-w-0">
-                <p className="truncate font-medium">{r.title || r.original_filename}</p>
-                <p className={`text-xs ${r.status === 'error' ? 'text-red-600' : 'text-stone-500'}`}>
-                  {STATUS_LABELS[r.status]}
-                  {r.status === 'error' && r.error ? ` — ${r.error.slice(0, 80)}` : ''}
-                </p>
-              </div>
-              {r.is_private ? <PrivateBadge /> : r.status !== 'error' && <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-amber-500" />}
-            </Link>
-          ))}
+        <section className="mb-8">
+          <h2 className="eyebrow mb-3">In progress</h2>
+          <div className="space-y-2.5">
+            {processing.map((r) => (
+              <Link key={r.id} href={`/recordings/${r.id}`} className="card flex items-center gap-4 px-4 py-3.5">
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${r.status === 'error' ? 'bg-danger/10 text-danger' : 'bg-sunken text-ink-2'}`}>
+                  <Icon name={r.status === 'error' ? 'retry' : 'wave'} className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[15px] font-semibold">{r.title || r.original_filename}</p>
+                  <p className={`mt-0.5 truncate text-[13px] ${r.status === 'error' ? 'text-danger' : 'text-muted'}`}>
+                    {STATUS_LABELS[r.status]}
+                    {r.status === 'error' && r.error ? ` · ${r.error}` : ''}
+                  </p>
+                </div>
+                {r.is_private ? <PrivateBadge /> : r.status !== 'error' && <Stepper status={r.status} />}
+              </Link>
+            ))}
+          </div>
         </section>
       )}
 
       {groups.size === 0 && processing.length === 0 && (
-        <div className="card py-10 text-center">
-          <p className="font-semibold">Inbox zero.</p>
-          <p className="mt-1 text-sm text-stone-500">Capture a thought or import from your recorder.</p>
-          <Link href="/capture" className="btn-primary mt-4">Capture</Link>
-        </div>
+        <EmptyState title="All clear." body="Nothing waiting on you. Capture a thought, or import from your recorder." action={{ href: '/capture', label: 'Capture' }} />
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-9">
         {[...groups.entries()].map(([recId, g]) => (
           <section key={recId}>
-            <Link href={`/recordings/${recId}`} className="mb-2 flex items-baseline justify-between text-sm">
-              <span className="truncate font-semibold text-stone-700 dark:text-stone-300">{g.label}</span>
-              <span className="shrink-0 pl-2 text-xs text-stone-500">{formatWhen(g.when, tz)}</span>
+            <Link href={`/recordings/${recId}`} className="mb-3 flex items-center gap-2 px-1">
+              <Icon name="mic" className="h-4 w-4 shrink-0 text-muted" />
+              <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-ink-2">{g.label}</span>
+              <span className="shrink-0 text-[12px] text-muted">{formatWhen(g.when, tz)}</span>
             </Link>
             <div className="space-y-3">
               {g.items.map((it) => <ItemCard key={it.id} item={it} quick />)}

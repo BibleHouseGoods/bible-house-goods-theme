@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { PrivateBadge } from '@/components/Badges';
+import { AREA_TEXT, AreaDot, PrivateBadge } from '@/components/Badges';
+import EmptyState from '@/components/EmptyState';
 import { formatWhen } from '@/components/format';
 import ItemCard from '@/components/ItemCard';
 import PageHeader from '@/components/PageHeader';
@@ -18,13 +19,25 @@ export default async function AreaPage({ params, searchParams }: { params: Promi
   const [items, privates] = await Promise.all([areaItems(ownerId, area, t), t ? Promise.resolve([]) : privateRecordings(ownerId, area)]);
   const tz = env().APP_TIMEZONE;
 
+  const chip = (active: boolean) =>
+    `shrink-0 rounded-full px-4 py-2 text-[14px] font-medium transition ${active ? 'bg-ink text-paper' : 'border border-line bg-surface text-ink-2'}`;
+
   return (
     <>
-      <PageHeader title={AREA_LABELS[area]} subtitle={`${items.length} filed${t ? ` · ${TYPE_LABELS[t]}` : ''}`} />
-      <nav className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 text-sm">
-        <Link href={`/areas/${area}`} className={`shrink-0 rounded-full px-3 py-1.5 ${!t ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-900' : 'border border-stone-300 dark:border-stone-700'}`}>All</Link>
+      <PageHeader
+        back={{ href: '/areas', label: 'Areas' }}
+        eyebrow={
+          <span className={`inline-flex items-center gap-1.5 ${AREA_TEXT[area]}`}>
+            <AreaDot area={area} />
+            {items.length} {t ? TYPE_LABELS[t].toLowerCase() + (items.length === 1 ? '' : 's') : 'filed'}
+          </span>
+        }
+        title={AREA_LABELS[area]}
+      />
+      <nav className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+        <Link href={`/areas/${area}`} className={chip(!t)}>All</Link>
         {CONTENT_TYPES.map((c) => (
-          <Link key={c} href={`/areas/${area}?type=${c}`} className={`shrink-0 rounded-full px-3 py-1.5 ${t === c ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-900' : 'border border-stone-300 dark:border-stone-700'}`}>
+          <Link key={c} href={`/areas/${area}?type=${c}`} className={chip(t === c)}>
             {TYPE_LABELS[c]}
           </Link>
         ))}
@@ -32,18 +45,18 @@ export default async function AreaPage({ params, searchParams }: { params: Promi
 
       <div className="space-y-3">
         {items.map((it) => <ItemCard key={it.id} item={it} />)}
-        {items.length === 0 && <p className="py-8 text-center text-sm text-stone-500">Nothing filed here yet.</p>}
+        {items.length === 0 && <EmptyState title="Nothing here yet." body={`Approved ${t ? TYPE_LABELS[t].toLowerCase() + 's' : 'items'} for ${AREA_LABELS[area]} will collect here.`} />}
       </div>
 
       {privates.length > 0 && (
-        <section className="mt-8">
-          <h2 className="label">Private recordings</h2>
-          <div className="space-y-2">
+        <section className="mt-10">
+          <h2 className="eyebrow mb-3">Private recordings</h2>
+          <div className="card divide-y divide-line p-0">
             {privates.map((r) => (
-              <Link key={r.id} href={`/recordings/${r.id}`} className="card flex items-center justify-between gap-3 py-3">
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{r.title || r.original_filename}</p>
-                  <p className="truncate text-xs text-stone-500">{formatWhen(r.recorded_at ?? r.created_at, tz)}{r.notes ? ` · ${r.notes}` : ''}</p>
+              <Link key={r.id} href={`/recordings/${r.id}`} className="flex items-center gap-3 px-5 py-4">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[15px] font-semibold">{r.title || r.original_filename}</p>
+                  <p className="truncate text-[13px] text-muted">{formatWhen(r.recorded_at ?? r.created_at, tz)}{r.notes ? ` · ${r.notes}` : ''}</p>
                 </div>
                 <PrivateBadge />
               </Link>

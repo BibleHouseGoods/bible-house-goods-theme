@@ -1,8 +1,9 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import Icon from './Icon';
 
-export default function ItemQuickActions({ id, summary }: { id: string; summary: string }) {
+export default function ItemQuickActions({ id }: { id: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState<null | 'approve' | 'reject'>(null);
   const [error, setError] = useState<string | null>(null);
@@ -18,17 +19,17 @@ export default function ItemQuickActions({ id, summary }: { id: string; summary:
   }
 
   return (
-    <div className="mt-3">
+    <>
       <div className="flex gap-2">
-        <button className="btn-primary flex-1" disabled={busy !== null} onClick={() => act('approve')}>
+        <button className="btn-primary min-h-11 flex-1" disabled={busy !== null} onClick={() => act('approve')}>
+          <Icon name="check" className="h-[18px] w-[18px]" strokeWidth={2.2} />
           {busy === 'approve' ? 'Approving…' : 'Approve'}
         </button>
-        <button className="btn-secondary" disabled={busy !== null} onClick={() => act('reject')}>
-          {busy === 'reject' ? '…' : 'Reject'}
+        <button className="btn-secondary min-h-11 px-4" disabled={busy !== null} onClick={() => act('reject')} aria-label="Reject">
+          <Icon name="x" className="h-[18px] w-[18px]" strokeWidth={2} />
         </button>
       </div>
-      <p className="mt-1.5 text-xs text-stone-500">{summary}</p>
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-    </div>
+      {error && <p className="mt-2 text-[13px] text-danger">{error}</p>}
+    </>
   );
 }

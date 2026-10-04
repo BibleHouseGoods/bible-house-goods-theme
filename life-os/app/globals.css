@@ -1,39 +1,153 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+/* ---------------------------------------------------------------------------
+   Life OS design tokens — warm paper, ink, and one quiet accent per area.
+   --------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+  --paper: #f6f3ec;
+  --surface: #fffdf9;
+  --sunken: #efeae0;
+  --ink: #1f1c17;
+  --ink-2: #4f4942;
+  --muted: #8a8378;
+  --line: #e5dfd3;
+  --line-strong: #d3cbbb;
+  --danger: #b4432f;
+  --success: #4c7a55;
+
+  --life: #5f7f62;
+  --life-soft: #e6ede2;
+  --church: #5b5492;
+  --church-soft: #e8e6f3;
+  --bible-house: #a5702a;
+  --bible-house-soft: #f4ead8;
+  --liberty: #3d6d8a;
+  --liberty-soft: #e1ebf1;
+
+  --shadow-card: 0 1px 0 rgb(31 28 23 / 0.03), 0 10px 30px -18px rgb(70 50 20 / 0.25);
+  --shadow-float: 0 12px 40px -12px rgb(31 28 23 / 0.35);
 }
 
-:root {
-  color-scheme: light dark;
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --paper: #12110e;
+    --surface: #1b1915;
+    --sunken: #0d0c0a;
+    --ink: #f2eee6;
+    --ink-2: #c4bdb1;
+    --muted: #8a8377;
+    --line: #2c2924;
+    --line-strong: #3b3730;
+    --danger: #e0806c;
+    --success: #8fbf96;
+
+    --life: #9cc09f;
+    --life-soft: #1e261d;
+    --church: #a9a2e0;
+    --church-soft: #221f33;
+    --bible-house: #e0ac63;
+    --bible-house-soft: #2c2215;
+    --liberty: #86b5d2;
+    --liberty-soft: #172631;
+
+    --shadow-card: 0 1px 0 rgb(255 255 255 / 0.02), 0 10px 30px -18px rgb(0 0 0 / 0.8);
+    --shadow-float: 0 12px 40px -12px rgb(0 0 0 / 0.9);
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-life: var(--life);
+  --color-life-soft: var(--life-soft);
+  --color-church: var(--church);
+  --color-church-soft: var(--church-soft);
+  --color-bible-house: var(--bible-house);
+  --color-bible-house-soft: var(--bible-house-soft);
+  --color-liberty: var(--liberty);
+  --color-liberty-soft: var(--liberty-soft);
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-fraunces), "Iowan Old Style", "Palatino", Georgia, serif;
+  --shadow-card: var(--shadow-card);
+  --shadow-float: var(--shadow-float);
 }
 
 html,
 body {
-  @apply bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100;
+  background: var(--paper);
+  color: var(--ink);
   -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
+::selection {
+  background: color-mix(in srgb, var(--bible-house) 30%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+   Primitives
+   --------------------------------------------------------------------------- */
 @utility card {
-  @apply rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900;
+  @apply rounded-[22px] border border-line bg-surface p-5 shadow-card;
 }
 
 @utility btn {
-  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-50;
+  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-[15px] font-semibold tracking-[-0.01em] transition duration-150 select-none active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45;
 }
 @utility btn-primary {
-  @apply btn bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900;
+  @apply btn bg-ink text-paper shadow-[0_6px_20px_-8px_rgb(31_28_23/0.6)];
 }
 @utility btn-secondary {
-  @apply btn border border-stone-300 bg-white text-stone-800 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100;
+  @apply btn border border-line-strong bg-surface text-ink;
+}
+@utility btn-ghost {
+  @apply btn text-ink-2 hover:bg-sunken;
 }
 @utility btn-danger {
-  @apply btn border border-red-300 bg-white text-red-700 dark:border-red-900 dark:bg-stone-900 dark:text-red-400;
+  @apply btn border border-line-strong bg-surface text-danger;
 }
 
 @utility field {
-  @apply w-full rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-base outline-none focus:border-stone-500 dark:border-stone-700 dark:bg-stone-900;
+  @apply w-full rounded-2xl border border-line bg-surface px-4 py-3 text-[16px] text-ink outline-none transition placeholder:text-muted focus:border-line-strong focus:ring-4 focus:ring-ink/5 disabled:opacity-60;
 }
 @utility label {
-  @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400;
+  @apply mb-2 block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted;
+}
+@utility eyebrow {
+  @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-muted;
+}
+@utility display {
+  @apply font-display tracking-[-0.02em];
+}
+
+/* Recording pulse */
+@keyframes ring {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.animate-ring {
+  animation: ring 1.8s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-rise {
+  animation: rise 0.35s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ring, .animate-rise, .animate-pulse { animation: none !important; }
 }

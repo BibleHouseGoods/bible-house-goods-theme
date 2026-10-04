@@ -6,8 +6,8 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'Life OS',
     start_url: '/',
     display: 'standalone',
-    background_color: '#fafaf9',
-    theme_color: '#1c1917',
+    background_color: '#f6f3ec',
+    theme_color: '#f6f3ec',
     icons: [{ src: '/icon.svg', sizes: 'any', type: 'image/svg+xml' }],
   };
 }

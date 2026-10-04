@@ -5,7 +5,7 @@ import { z } from 'zod';
 // prefixed NEXT_PUBLIC_, so none of it can be bundled into browser code.
 const schema = z.object({
   APP_URL: z.string().url(),
-  APP_TIMEZONE: z.string().default('America/New_York'),
+  APP_TIMEZONE: z.string().default('America/Chicago'),
   APP_PASSWORD_HASH: z.string().startsWith('scrypt$'),
   SESSION_SECRET: z.string().min(32),
   ENCRYPTION_KEY: z.string().min(40), // base64 of 32 random bytes
