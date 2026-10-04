@@ -1,14 +1,16 @@
 import PageHeader from '@/components/PageHeader';
 import { formatWhen, timeZoneLabel } from '@/components/format';
 import Icon from '@/components/Icon';
+import SecurityActions from '@/components/SecurityActions';
 import { DisconnectGoogle, LogoutButton } from '@/components/SettingsActions';
 import { Row } from '@/components/ui';
 import { env, envStatus } from '@/lib/env';
+import { securityStatus } from '@/lib/auth';
 import { getIntegration } from '@/lib/google/auth';
 import { recentAudit } from '@/lib/queries';
 import { requireOwner } from '@/lib/session';
 
-const OPTIONAL = new Set(['APP_TIMEZONE', 'OPENAI_TRANSCRIBE_MODEL', 'OPENAI_TEXT_MODEL', 'OPENAI_REASONING_EFFORT', 'GOOGLE_ALLOWED_EMAIL', 'GOOGLE_CALENDAR_ID', 'GOOGLE_DRIVE_ROOT_NAME']);
+const OPTIONAL = new Set(['SETUP_TOKEN', 'APP_TIMEZONE', 'OPENAI_TRANSCRIBE_MODEL', 'OPENAI_TEXT_MODEL', 'OPENAI_REASONING_EFFORT', 'GOOGLE_ALLOWED_EMAIL', 'GOOGLE_CALENDAR_ID', 'GOOGLE_DRIVE_ROOT_NAME']);
 
 function Status({ ok, children }: { ok: boolean; children: React.ReactNode }) {
   return (
@@ -32,6 +34,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   }
   const google = e ? await getIntegration(ownerId).catch(() => null) : null;
   const audit = await recentAudit(ownerId).catch(() => []);
+  const security = await securityStatus().catch(() => null);
   const areaProjects = (['LIFE', 'CHURCH', 'BIBLE_HOUSE', 'LIBERTY'] as const).filter((a) => status[`TODOIST_PROJECT_${a}`]).length;
 
   return (
@@ -68,6 +71,21 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             />
           </div>
           <p className="mt-2 px-1 text-[12px] leading-relaxed text-muted">Google access is limited to files Life OS creates, calendar events, and creating Gmail drafts. Life OS can't send email.</p>
+        </section>
+
+        <section>
+          <h2 className="eyebrow mb-3 px-1">Security</h2>
+          <div className="card divide-y divide-line">
+            <Row
+              icon={<Icon name="lock" />}
+              title="Two-factor sign-in"
+              description={security?.mfa ? `On since ${formatWhen(security.since, e?.APP_TIMEZONE)} · ${security.recoveryLeft} recovery codes left` : 'Not set up'}
+              control={<Status ok={Boolean(security?.mfa)}>{security?.mfa ? 'On' : 'Off'}</Status>}
+            >
+              {security?.mfa && <SecurityActions />}
+            </Row>
+          </div>
+          <p className="mt-2 px-1 text-[12px] leading-relaxed text-muted">Sign-in needs your passphrase and a code from your authenticator. Eight failed attempts lock sign-in for 15 minutes.</p>
         </section>
 
         {e && (

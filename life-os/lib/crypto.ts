@@ -25,10 +25,20 @@ export function decrypt(payload: string): string {
   return Buffer.concat([decipher.update(Buffer.from(ct, 'base64url')), decipher.final()]).toString('utf8');
 }
 
+export function hashPassword(password: string): string {
+  const salt = randomBytes(16);
+  const hash = scryptSync(password, salt, 64, { N: 16384, r: 8, p: 1 });
+  return `scrypt$${salt.toString('base64url')}$${hash.toString('base64url')}`;
+}
+
 export function verifyPassword(password: string, stored: string): boolean {
   const [scheme, salt, hash] = stored.split('$');
   if (scheme !== 'scrypt' || !salt || !hash) return false;
   const expected = Buffer.from(hash, 'base64url');
+  if (expected.length < 16) {
+    scryptSync(password, 'timing-pad', 64, { N: 16384, r: 8, p: 1 });
+    return false;
+  }
   const actual = scryptSync(password, Buffer.from(salt, 'base64url'), expected.length, { N: 16384, r: 8, p: 1 });
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }

@@ -56,7 +56,7 @@ Tick **Private** at capture (or later, on the recording). Audio goes to your Dri
 
 ### 1. Supabase
 1. Create a project.
-2. SQL editor → run `supabase/migrations/0001_init.sql` (or `supabase db push`).
+2. SQL editor → run `supabase/migrations/0001_init.sql` then `0002_mfa.sql` (or `supabase db push`).
 3. Copy the project URL and **service role** key. Auth → disable sign-ups (the app doesn't use Supabase Auth, but keep it closed).
 
 ### 2. Google Cloud
@@ -73,8 +73,9 @@ Settings → Integrations → Developer → copy API token. Optionally put per-a
 1. Import this repo; set **Root Directory** to `life-os`.
 2. Add every variable from `.env.example` (mark secrets Sensitive).
 3. Enable Fluid compute (default on new projects). The processing route uses `maxDuration = 300`; on Pro you can raise it to 800 in `app/api/recordings/[id]/process/route.ts`.
-4. Deploy, open the app, sign in, go to **Settings → Connect Google**.
-5. On iPhone: Share → **Add to Home Screen**.
+4. Deploy, then open `https://<your-app>/setup?token=<SETUP_TOKEN>`: choose your passphrase, scan the QR code with your authenticator app, and save your recovery codes.
+5. Go to **Settings → Connect Google**.
+6. On iPhone: Share → **Add to Home Screen**.
 
 ### Local development
 ```bash

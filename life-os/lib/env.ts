@@ -6,7 +6,9 @@ import { z } from 'zod';
 const schema = z.object({
   APP_URL: z.string().url(),
   APP_TIMEZONE: z.string().default('America/Chicago'),
-  APP_PASSWORD_HASH: z.string().startsWith('scrypt$'),
+  // One-time token that unlocks /setup (choose passphrase + enrol authenticator).
+  // Setup locks itself permanently once two-factor is confirmed.
+  SETUP_TOKEN: z.string().min(24).optional(),
   SESSION_SECRET: z.string().min(32),
   ENCRYPTION_KEY: z.string().min(40), // base64 of 32 random bytes
 

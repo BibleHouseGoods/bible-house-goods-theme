@@ -19,7 +19,10 @@ Life OS is designed with strong security from day one. This document describes w
 - Audio playback is streamed through the app, so Drive file access never relies on public sharing links.
 
 ### Access control
-- **Single user, no sign-ups.** One passphrase, stored only as a salted **scrypt** hash. Failed logins are delayed and audited.
+- **Single user, no sign-ups, two-factor required.** Sign-in needs a passphrase (salted **scrypt** hash, 12+ characters) **and** a 6-digit TOTP code from an authenticator app (RFC 6238, verified against the RFC test vectors). Each code works once (replay-protected). Ten one-time recovery codes are issued at setup and stored only as SHA-256 hashes.
+- **First-run setup** happens at `/setup?token=…` with a one-time `SETUP_TOKEN`; you choose the passphrase yourself, so nobody else ever sees it. Setup locks itself permanently once two-factor is confirmed.
+- **Lockout:** 8 failed sign-ins within 15 minutes locks sign-in for 15 minutes (counted in the database, so it holds across serverless instances). Failures are delayed and audited with IP.
+- Changing the passphrase or regenerating recovery codes requires the current passphrase **and** a fresh authenticator code.
 - Sessions are signed (HS256) httpOnly, Secure, SameSite=Lax cookies; 30-day expiry.
 - `proxy.ts` blocks every page and API route without a valid session, and rejects state-changing API requests whose `Origin` isn't the app (CSRF defence).
 - Google: only the account in `GOOGLE_ALLOWED_EMAIL` can be connected. Scopes are minimal: `drive.file` (Life OS sees only files it created, not your whole Drive), `calendar.events`, and `gmail.compose` (create drafts; the app has no code path that sends mail).
@@ -57,6 +60,8 @@ For sensitive pastoral or personal material, use **Private** recordings: they ne
 - [ ] Turn on 2FA on Vercel, Supabase, Google, OpenAI and Todoist.
 - [ ] Mark all Vercel env vars "Sensitive"; restrict Vercel team access.
 - [ ] Optionally put Vercel Deployment Protection or a custom domain behind Vercel's firewall rules.
+- [ ] After setup, delete `SETUP_TOKEN` from Vercel (setup is already locked, this is belt-and-braces).
+- [ ] Lost phone and recovery codes? Delete the row in `auth_credentials`, set a new `SETUP_TOKEN`, and run setup again.
 - [ ] Rotate `SESSION_SECRET` to sign out all sessions; rotate the OpenAI and Todoist keys periodically.
 - [ ] Rotating `ENCRYPTION_KEY` requires reconnecting Google (the stored token can't be decrypted with a new key).
 - [ ] Enable Supabase Point-in-Time Recovery and Drive backups if you need recoverability.
